@@ -55,7 +55,7 @@
         }
         #splash-screen.fade-out {
             opacity: 0;
-            pointer-events: none;
+            /* Removed pointer-events: none from here, now handled in JS for immediacy */
         }
         .splash-logo {
             font-size: 4em;
@@ -69,13 +69,14 @@
             color: var(--text-light);
         }
         .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.2);
+            border: 4px solid rgba(255, 255, 255, 0.6); /* Made more visible */
             border-top: 4px solid var(--purple-accent);
             border-radius: 50%;
             width: 30px;
             height: 30px;
             animation: spin 1s linear infinite;
             margin-top: 20px;
+            display: block; /* Ensure it's always block by default within splash */
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -92,6 +93,7 @@
             max-width: 350px;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
             animation: fadeInScale 0.5s ease-out;
+            display: none; /* Hidden by default in HTML */
         }
         @keyframes fadeInScale {
             from { opacity: 0; transform: scale(0.9); }
@@ -327,7 +329,7 @@
             width: 100vw;
             height: 100dvh;
             background-color: var(--dark-bg);
-            z-index: 20; /* Above everything */
+            z-index: 100; /* Made higher to ensure interaction */
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -454,7 +456,7 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 100;
+            z-index: 101; /* Made higher than settings panel */
             max-width: 90%;
         }
 
@@ -525,6 +527,9 @@
     </style>
 </head>
 <body>
+    <!-- Diagnostic Test Button - Visible when main app loads -->
+    <button id="test-interaction-btn" style="position: fixed; top: 10px; left: 10px; z-index: 9999; background: white; color: black; padding: 5px; border-radius: 5px; display: none;">Test Button</button>
+
     <!-- Splash Screen -->
     <div id="splash-screen">
         <i class="fas fa-video splash-logo"></i>
@@ -615,6 +620,7 @@
         const loadingSpinner = document.getElementById('loading-spinner');
         const pwaPrompt = document.getElementById('pwa-prompt');
         const pwaPromptDismissBtn = document.getElementById('pwa-prompt-dismiss');
+        const testInteractionBtn = document.getElementById('test-interaction-btn'); // Diagnostic button
 
         const camera1Select = document.getElementById('camera1-select');
         const camera2Select = document.getElementById('camera2-select');
@@ -777,19 +783,24 @@
                     getCameraStream(2)
                 ]);
 
+                // Show diagnostic button regardless of camera success/failure
+                testInteractionBtn.style.display = 'block';
+
                 if (results[0] && results[1]) { // Both streams successfully acquired
                     isCameraReady = true;
                     console.log('Both cameras ready.');
                     handlePWAInstallPrompt(); // Check for PWA prompt AFTER cameras are ready
                 } else {
                     console.log('One or both camera streams failed to load. Showing error and then dismissing splash.');
-                    // If one or both failed, hide splash after a delay, regardless of PWA prompt
-                    setTimeout(hideSplashScreen, 5000);
+                    // If one or both failed, hide spinner and then eventually hide splash
+                    loadingSpinner.style.display = 'none'; // Hide spinner if cameras failed
+                    setTimeout(hideSplashScreen, 5000); // Hide main splash (with error message) after a delay
                 }
 
             } catch (error) {
                 console.error('Error in enumerateDevices:', error);
                 showMessage(`Error initializing cameras: ${error.message}. Please allow camera access.`, 'error');
+                testInteractionBtn.style.display = 'block'; // Show diagnostic button on enumeration error
                 setTimeout(hideSplashScreen, 5000); // Hide splash after delay on any enumeration error
             }
         }
@@ -916,11 +927,23 @@
 
         // Splash Screen management
         function showSplashScreen() {
+            splashScreen.style.display = 'flex'; // Ensure it's visible before transition
             splashScreen.classList.remove('fade-out');
+            splashScreen.style.pointerEvents = 'auto'; // Ensure it can receive events while visible
         }
 
         function hideSplashScreen() {
             splashScreen.classList.add('fade-out');
+            splashScreen.style.pointerEvents = 'none'; // Immediately disable pointer events
+
+            // Explicitly hide sub-elements to prevent any lingering interactivity/visuals
+            loadingSpinner.style.display = 'none';
+            pwaPrompt.style.display = 'none';
+
+            // After the fade-out transition, completely remove the splash screen from layout
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+            }, 500); // Matches the 0.5s transition duration
         }
 
         // PWA detection and prompt for iPhone
@@ -929,6 +952,13 @@
             // Check for iPad, iPhone, iPod and ensure it's not a Mac (iPadOS can spoof Safari on Mac)
             return /iphone|ipad|ipod/.test(userAgent) && !/macintosh/.test(userAgent);
         }
+        
+        // New: Check if the user agent indicates a mobile device (any phone, not just iOS)
+        function isMobileDevice() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            return /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|rim)|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(userAgent) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|gdm)|ad(ao|sh)|ai(ko|ri)|ap(ap|bd)|bi(ll|lb)|br(ev|ri)|c55o|cdm|cldc|cmd|co(mp|nd)|craw|da(is|eo)|dc-s|ze(t|us)|ht(c_|o_)|ip(ap|vl)|iq12|jdk|jim|kddi|ko(x|v)|kyo(c|k)|le(no|xi)|lg( g50|h50|tps)|mb(x|w)|md(sl|us)|mi(lb|nd)|mm-a|pn-ne|pan(d|t)|phil|pl(ay|uc)|pm(m )|ps(at|us)|qtek|so(l|g)o|t(ex|so)|up(eg|si)|vk(4|5)0|v(w|yo)|wg|wl(d|t)|x|ylo|xm(w|d)|zi(cl|us)/i.test(userAgent.substring(0, 4));
+        }
+
 
         function isInStandaloneMode() {
             // Older iOS detection (still reliable for many cases)
@@ -940,11 +970,13 @@
         }
 
         function handlePWAInstallPrompt() {
+            // Only show PWA prompt if it's an iOS device AND it's not already in standalone mode
             if (isIos() && !isInStandaloneMode()) {
                 loadingSpinner.style.display = 'none'; // Hide spinner
                 pwaPrompt.style.display = 'block';    // Show PWA prompt
             } else {
-                hideSplashScreen(); // Hide splash screen if not iOS or already in PWA
+                // If not iOS, or already in standalone mode, just hide splash screen
+                hideSplashScreen();
             }
         }
 
@@ -982,9 +1014,15 @@
             }
         });
 
+        testInteractionBtn.addEventListener('click', () => {
+            showMessage('Test button clicked! Interaction works.', 'success');
+        });
+
+
         // Initialize on page load
         window.onload = () => {
             showSplashScreen(); // Show splash screen first
+            loadingSpinner.style.display = 'block'; // Ensure spinner is visible initially
             handleOrientationChange(); // Set initial orientation class
             enumerateDevices(); // Start camera enumeration process
         };
@@ -1007,8 +1045,9 @@
 
         // Listen for PWA mode entry (e.g., if user adds to home screen and re-opens)
         window.addEventListener('load', () => {
+            // If already in PWA mode on load, hide immediately
             if (isInStandaloneMode()) {
-                hideSplashScreen(); // If already in PWA mode on load, hide immediately
+                hideSplashScreen();
             }
         });
     </script>
