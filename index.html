@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dual Cam App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        :root {
+            --dark-bg: #121212;
+            --medium-dark: #202020;
+            --light-dark: #3a3a3a;
+            --accent-red: #e74c3c;
+            --accent-red-hover: #c0392b;
+            --text-light: #e0e0e0;
+            --text-secondary: #c0c0d0;
+            --purple-accent: #8e44ad;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100dvh; /* Use dvh for full viewport height on mobile */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden; /* Prevent body scrolling */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Splash Screen Styles */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark-bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            text-align: center;
+            padding: 20px;
+        }
+        #splash-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .splash-logo {
+            font-size: 4em;
+            color: var(--purple-accent);
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(142, 68, 173, 0.5);
+        }
+        .splash-text {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid var(--purple-accent);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* iPhone PWA Prompt */
+        #pwa-prompt {
+            background-color: rgba(0, 0, 0, 0.85);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            color: white;
+            max-width: 350px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            animation: fadeInScale 0.5s ease-out;
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        #pwa-prompt h3 {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--purple-accent);
+        }
+        #pwa-prompt p {
+            font-size: 0.95em;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        #pwa-prompt .pwa-steps {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            text-align: left;
+        }
+        #pwa-prompt .pwa-steps li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #pwa-prompt .pwa-steps .icon-wrapper {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 6px 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #pwa-prompt .pwa-steps .icon-wrapper .fa-share-square,
+        #pwa-prompt .pwa-steps .icon-wrapper .fa-plus-square {
+            font-size: 1.3em;
+            color: #7dd3fc; /* Light blue for iOS share icon hint */
+        }
+        #pwa-prompt button {
+            background-color: var(--purple-accent);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        #pwa-prompt button:hover {
+            background-color: #9b59b6;
+        }
+
+
+        /* Main App Container */
+        .app-container {
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Hide app content when settings are open */
+        .app-container.hidden-for-settings {
+            transform: scale(0.9);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Main Camera UI */
+        .camera-ui {
+            flex-grow: 1; /* Take all available space */
+            display: flex;
+            flex-direction: column; /* Default portrait layout */
+            justify-content: flex-end; /* Push controls to bottom */
+            align-items: center;
+            position: relative; /* For absolutely positioned elements */
+            background-color: #000; /* Black viewfinder */
+            overflow: hidden;
+        }
+
+        .video-previews {
+            flex-grow: 1; /* Videos take most of the space */
+            width: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Flip for selfie camera effect */
+        }
+
+        .pip-video {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 100px;
+            height: 75px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+            transform: scaleX(-1); /* Flip for selfie camera effect */
+            z-index: 5;
+        }
+        @media (max-width: 400px) {
+            .pip-video {
+                width: 80px;
+                height: 60px;
+                top: 10px;
+                right: 10px;
+            }
+        }
+
+        .control-bar {
+            width: 100%;
+            height: 100px; /* Fixed height for control bar */
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom, 10px); /* For iPhone X notch */
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 10; /* Ensure controls are above video */
+        }
+
+        .record-button {
+            background-color: var(--accent-red);
+            color: white;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.3), 0 5px 20px rgba(0, 0, 0, 0.5);
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        .record-button:hover {
+            background-color: var(--accent-red-hover);
+            transform: scale(1.05);
+        }
+        .record-button:active {
+            transform: scale(0.95);
+        }
+        .record-button.recording {
+            background-color: var(--accent-red-hover);
+            animation: none;
+            box-shadow: 0 0 0 8px rgba(255, 0, 0, 0.5), 0 5px 20px rgba(0, 0, 0, 0.5);
+            border-radius: 18px; /* Slightly squarer for stop button effect */
+            width: 60px;
+            height: 60px;
+            font-size: 1.8em;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        .settings-toggle-button {
+            background-color: rgba(60, 60, 60, 0.7);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 1.2em;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: absolute; /* Position relative to .camera-ui */
+            top: 20px;
+            right: 20px;
+            z-index: 10; /* Ensure it's above video */
+        }
+        .settings-toggle-button:hover {
+            background-color: rgba(90, 90, 90, 0.9);
+        }
+        /* Top bar for additional settings/indicators */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px; /* Height for top bar */
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            padding-top: env(safe-area-inset-top, 0px); /* For iPhone notch */
+            z-index: 10;
+        }
+        .top-bar .indicators {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+        .top-bar .indicators span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .top-bar .indicators .recording-indicator {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+
+        /* Full-screen settings panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100dvh;
+            background-color: var(--dark-bg);
+            z-index: 20; /* Above everything */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: transform 0.3s ease-in-out;
+            transform: translateY(100%); /* Start off-screen at the bottom */
+            visibility: hidden; /* Hide completely when not active */
+            overflow-y: auto; /* Allow scrolling within the settings panel if content is too long */
+            padding-top: env(safe-area-inset-top, 20px);
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+        .settings-panel.active {
+            transform: translateY(0); /* Slide up to active position */
+            visibility: visible;
+        }
+
+        .settings-panel-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 0 10px;
+            max-width: 600px; /* Max width for settings content */
+        }
+
+        .settings-panel-content {
+            display: grid;
+            grid-template-columns: 1fr; /* Single column on mobile */
+            gap: 20px;
+            width: 100%;
+            max-width: 600px; /* Max width for settings content */
+            flex-grow: 1; /* Allow content to grow */
+            overflow-y: auto; /* Ensure settings content can scroll */
+            padding-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .settings-panel-content {
+                grid-template-columns: repeat(2, 1fr); /* Two columns on desktop */
+                max-width: 800px; /* Larger max width for desktop settings */
+            }
+        }
+        @media (max-width: 500px) {
+            .settings-panel-content {
+                max-width: 95%; /* Adjust for mobile */
+                padding: 0 10px; /* Add horizontal padding */
+            }
+        }
+
+        .settings-group {
+            background-color: var(--medium-dark);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .settings-group label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        .settings-group select, .settings-group input[type="range"] {
+            background-color: var(--light-dark);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            padding: 10px 14px;
+            border-radius: 8px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .settings-group select:focus, .settings-group input[type="range"]:focus {
+            outline: none;
+            border-color: var(--purple-accent);
+            box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.5);
+        }
+        /* Custom styles for range input thumb and track */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--purple-accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--purple-accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        input[type="range"]::-moz-range-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .message-box {
+            background-color: var(--light-dark);
+            color: var(--text-light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            max-width: 90%;
+        }
+
+        .close-settings-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 2em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .close-settings-btn:hover {
+            color: var(--accent-red);
+        }
+
+        /* Landscape Specific Styles */
+        @media (orientation: landscape) {
+            .camera-ui {
+                flex-direction: row; /* Side-by-side videos and controls */
+                justify-content: flex-start;
+                align-items: stretch;
+            }
+            .video-previews {
+                flex-direction: row; /* Main video and PIP can be side by side or main takes full */
+                width: calc(100% - 100px); /* Leave space for vertical control bar */
+                height: 100%;
+            }
+            .main-video {
+                width: 100%; /* Main video takes full landscape width */
+                height: 100%;
+            }
+            .pip-video {
+                top: 15px;
+                left: 15px; /* Position PIP on the left in landscape */
+                right: auto;
+            }
+            .control-bar {
+                width: 100px; /* Fixed width for vertical control bar */
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                flex-direction: column; /* Buttons stack vertically */
+                justify-content: center;
+                padding-bottom: 0;
+                padding-right: env(safe-area-inset-right, 10px); /* For iPhone notch */
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            }
+            .settings-toggle-button {
+                top: 20px;
+                right: 120px; /* Adjust position to not overlap vertical control bar */
+            }
+            .top-bar {
+                flex-direction: column; /* Stack vertically if needed, or adjust padding */
+                width: 60px; /* Narrower top bar in landscape */
+                height: 100%; /* Takes full height */
+                right: 0;
+                left: auto;
+                background: linear-gradient(to left, rgba(0,0,0,0.8), rgba(0,0,0,0));
+                justify-content: flex-start;
+                padding: 20px 0;
+                padding-right: env(safe-area-inset-right, 0px);
+                padding-top: env(safe-area-inset-top, 0px);
+            }
+            .top-bar .indicators {
+                flex-direction: column; /* Stack indicators vertically */
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <i class="fas fa-video splash-logo"></i>
+        <div class="splash-text">Dual Cam Pro</div>
+        <div class="loading-spinner" id="loading-spinner"></div>
+        <div id="pwa-prompt" style="display:none;">
+            <h3>Add to Home Screen for Full Experience!</h3>
+            <p>For a full-screen, app-like experience on your iPhone:</p>
+            <ul class="pwa-steps">
+                <li><span class="icon-wrapper"><i class="fas fa-share-square"></i></span> Tap the **Share** button at the bottom of Safari.</li>
+                <li><span class="icon-wrapper"><i class="fas fa-plus-square"></i></span> Scroll down and tap **Add to Home Screen**.</li>
+                <li>Then, launch the app from your home screen.</li>
+            </ul>
+            <button id="pwa-prompt-dismiss">Got It!</button>
+        </div>
+    </div>
+
+    <div class="app-container" id="app-container">
+        <div class="camera-ui" id="camera-ui">
+            <div class="top-bar">
+                <div class="indicators">
+                    <span id="resolution-indicator"><i class="fas fa-ruler-combined"></i> --</span>
+                    <span id="fps-indicator"><i class="fas fa-tachometer-alt"></i> --</span>
+                </div>
+            </div>
+            <div class="video-previews">
+                <video id="camera1-preview" class="main-video" autoplay playsinline muted></video>
+                <video id="camera2-preview" class="pip-video" autoplay playsinline muted></video>
+            </div>
+            <div class="control-bar">
+                <button id="settings-toggle-btn" class="settings-toggle-button">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button id="record-btn" class="record-button">
+                    <i id="record-icon" class="fas fa-circle"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Panel (Full Screen Overlay) -->
+        <div id="settings-panel" class="settings-panel">
+            <div class="settings-panel-header">
+                <h2 class="text-3xl font-bold text-purple-300">Settings</h2>
+                <button id="close-settings-btn" class="close-settings-btn">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </div>
+            <div class="settings-panel-content">
+                <!-- Camera 1 Settings -->
+                <div class="settings-group">
+                    <label for="camera1-select">Camera 1:</label>
+                    <select id="camera1-select" class="w-full"></select>
+                    <label for="res1-select">Resolution (Cam 1):</label>
+                    <select id="res1-select" class="w-full">
+                        <option value="1280x720">720p (1280x720)</option>
+                        <option value="1920x1080">1080p (1920x1080)</option>
+                        <option value="640x480">480p (640x480)</option>
+                        <option value="3840x2160">4K (3840x2160)</option>
+                    </select>
+                    <label for="fps1-range">FPS (Cam 1): <span id="fps1-value">30</span></label>
+                    <input type="range" id="fps1-range" min="15" max="60" value="30" step="5" class="w-full">
+                </div>
+
+                <!-- Camera 2 Settings -->
+                <div class="settings-group">
+                    <label for="camera2-select">Camera 2:</label>
+                    <select id="camera2-select" class="w-full"></select>
+                    <label for="res2-select">Resolution (Cam 2):</label>
+                    <select id="res2-select" class="w-full">
+                        <option value="1280x720">720p (1280x720)</option>
+                        <option value="1920x1080">1080p (1920x1080)</option>
+                        <option value="640x480">480p (640x480)</option>
+                        <option value="3840x2160">4K (3840x2160)</option>
+                    </select>
+                    <label for="fps2-range">FPS (Cam 2): <span id="fps2-value">30</span></label>
+                    <input type="range" id="fps2-range" min="15" max="60" value="30" step="5" class="w-full">
+                </div>
+            </div>
+        </div>
+
+        <div id="message-box" class="message-box"></div>
+    </div>
+
+    <script>
+        const appContainer = document.getElementById('app-container');
+        const cameraUi = document.getElementById('camera-ui');
+        const splashScreen = document.getElementById('splash-screen');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const pwaPrompt = document.getElementById('pwa-prompt');
+        const pwaPromptDismissBtn = document.getElementById('pwa-prompt-dismiss');
+
+        const camera1Select = document.getElementById('camera1-select');
+        const camera2Select = document.getElementById('camera2-select');
+        const res1Select = document.getElementById('res1-select');
+        const res2Select = document.getElementById('res2-select');
+        const fps1Range = document.getElementById('fps1-range');
+        const fps2Range = document.getElementById('fps2-range');
+        const fps1Value = document.getElementById('fps1-value');
+        const fps2Value = document.getElementById('fps2-value');
+        const camera1Preview = document.getElementById('camera1-preview');
+        const camera2Preview = document.getElementById('camera2-preview');
+        const recordBtn = document.getElementById('record-btn');
+        const recordIcon = document.getElementById('record-icon');
+        const settingsToggleButton = document.getElementById('settings-toggle-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const messageBox = document.getElementById('message-box');
+        const resolutionIndicator = document.getElementById('resolution-indicator');
+        const fpsIndicator = document.getElementById('fps-indicator');
+
+        let camera1Stream = null;
+        let camera2Stream = null;
+        let mediaRecorder1 = null;
+        let mediaRecorder2 = null;
+        let recordedChunks1 = [];
+        let recordedChunks2 = [];
+        let isRecording = false;
+        let isCameraReady = false;
+
+        // Function to display messages to the user
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box mt-4 p-4 rounded-lg shadow-lg text-center ${
+                type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600'
+            }`;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 5000); // Hide after 5 seconds
+        }
+
+        // Update UI indicators
+        function updateIndicators() {
+            const [width1, height1] = res1Select.value.split('x').map(Number);
+            const fps1 = fps1Range.value;
+            resolutionIndicator.innerHTML = `<i class="fas fa-ruler-combined"></i> ${width1}x${height1}`;
+            fpsIndicator.innerHTML = `<i class="fas fa-tachometer-alt"></i> ${fps1}FPS`;
+        }
+
+        // Function to get camera stream based on selected device and settings
+        async function getCameraStream(cameraNumber) {
+            const selectElement = cameraNumber === 1 ? camera1Select : camera2Select;
+            const videoElement = cameraNumber === 1 ? camera1Preview : camera2Preview;
+            const resSelectElement = cameraNumber === 1 ? res1Select : res2Select;
+            const fpsRangeElement = cameraNumber === 1 ? fps1Range : fps2Range;
+
+            // Stop existing stream if any
+            if (cameraNumber === 1 && camera1Stream) {
+                camera1Stream.getTracks().forEach(track => track.stop());
+                camera1Stream = null;
+            } else if (cameraNumber === 2 && camera2Stream) {
+                camera2Stream.getTracks().forEach(track => track.stop());
+                camera2Stream = null;
+            }
+
+            const deviceId = selectElement.value;
+            if (!deviceId) {
+                console.warn(`No camera selected for camera ${cameraNumber}.`);
+                videoElement.srcObject = null;
+                return;
+            }
+
+            const [width, height] = resSelectElement.value.split('x').map(Number);
+            const frameRate = parseInt(fpsRangeElement.value);
+
+            const constraints = {
+                video: {
+                    deviceId: { exact: deviceId },
+                    width: { ideal: width },
+                    height: { ideal: height },
+                    frameRate: { ideal: frameRate }
+                },
+                audio: true // Always request audio
+            };
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = stream;
+                console.log(`Camera ${cameraNumber} stream initialized with ${width}x${height} at ${frameRate} FPS.`);
+                if (cameraNumber === 1) {
+                    camera1Stream = stream;
+                } else {
+                    camera2Stream = stream;
+                }
+                updateIndicators(); // Update indicators after stream change
+                return true; // Indicate success
+            } catch (error) {
+                console.error(`Error accessing camera ${cameraNumber}:`, error);
+                showMessage(`Could not access camera ${cameraNumber}. Error: ${error.message}. Please ensure it's not in use and permissions are granted.`, 'error');
+                videoElement.srcObject = null;
+                return false; // Indicate failure
+            }
+        }
+
+        // Function to enumerate available media devices (cameras)
+        async function enumerateDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                // Clear existing options
+                camera1Select.innerHTML = '';
+                camera2Select.innerHTML = '';
+
+                if (videoDevices.length === 0) {
+                    showMessage('No video input devices found. Please connect a camera.', 'error');
+                    // Still hide splash after delay even if no cameras
+                    setTimeout(hideSplashScreen, 5000);
+                    return;
+                }
+
+                videoDevices.forEach(device => {
+                    const option1 = document.createElement('option');
+                    option1.value = device.deviceId;
+                    option1.textContent = device.label || `Camera ${camera1Select.options.length + 1}`;
+                    camera1Select.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = device.deviceId;
+                    option2.textContent = device.label || `Camera ${camera2Select.options.length + 1}`;
+                    camera2Select.appendChild(option2);
+                });
+
+                // Set different default cameras if possible
+                if (videoDevices.length >= 2) {
+                    camera1Select.value = videoDevices[0].deviceId;
+                    camera2Select.value = videoDevices[1].deviceId;
+                } else if (videoDevices.length === 1) {
+                    camera1Select.value = videoDevices[0].deviceId;
+                    camera2Select.value = videoDevices[0].deviceId; // Fallback to same camera if only one
+                    showMessage('Only one camera found. Both previews will show the same camera feed.', 'info');
+                }
+
+                // Attempt to get both camera streams
+                const results = await Promise.all([
+                    getCameraStream(1),
+                    getCameraStream(2)
+                ]);
+
+                if (results[0] && results[1]) { // Both streams successfully acquired
+                    isCameraReady = true;
+                    handlePWAInstallPrompt(); // Check for PWA prompt AFTER cameras are ready
+                    updateIndicators(); // Update indicators with initial values
+                } else {
+                    // If one or both failed, hide splash after a delay
+                    setTimeout(hideSplashScreen, 5000);
+                }
+
+            } catch (error) {
+                console.error('Error enumerating devices:', error);
+                showMessage(`Error enumerating devices: ${error.message}. Please allow camera access.`, 'error');
+                setTimeout(hideSplashScreen, 5000); // Hide splash after delay on error
+            }
+        }
+
+        // Function to handle record button click
+        function toggleRecording() {
+            if (!isCameraReady) {
+                showMessage('Cameras are not ready yet. Please wait.', 'info');
+                return;
+            }
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // Function to start recording
+        function startRecording() {
+            if (!camera1Stream || !camera2Stream) {
+                showMessage('Please select and enable both cameras first.', 'error');
+                return;
+            }
+
+            recordedChunks1 = [];
+            recordedChunks2 = [];
+
+            try {
+                const mimeType = 'video/webm';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    showMessage(`Recording format ${mimeType} is not supported by your browser.`, 'error');
+                    console.error(`MediaRecorder does not support ${mimeType}`);
+                    return;
+                }
+
+                mediaRecorder1 = new MediaRecorder(camera1Stream, { mimeType: mimeType });
+                mediaRecorder2 = new MediaRecorder(camera2Stream, { mimeType: mimeType });
+
+                mediaRecorder1.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks1.push(event.data);
+                    }
+                };
+                mediaRecorder2.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks2.push(event.data);
+                    }
+                };
+
+                mediaRecorder1.onstop = () => {
+                    if (recordedChunks1.length > 0) {
+                        downloadRecordedVideo(recordedChunks1, 'camera1_recording.webm');
+                    } else {
+                        console.warn('No data recorded for camera 1.');
+                    }
+                };
+                mediaRecorder2.onstop = () => {
+                    if (recordedChunks2.length > 0) {
+                        downloadRecordedVideo(recordedChunks2, 'camera2_recording.webm');
+                    } else {
+                        console.warn('No data recorded for camera 2.');
+                    }
+                };
+
+                mediaRecorder1.start();
+                mediaRecorder2.start();
+
+                isRecording = true;
+                recordBtn.classList.add('recording');
+                recordIcon.classList.remove('fa-circle');
+                recordIcon.classList.add('fa-square');
+                showMessage('Recording started...', 'success');
+                console.log('Recording started for both cameras.');
+
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                showMessage(`Error starting recording: ${error.message}.`, 'error');
+            }
+        }
+
+        // Function to stop recording
+        function stopRecording() {
+            if (mediaRecorder1 && mediaRecorder1.state === 'recording') {
+                mediaRecorder1.stop();
+            }
+            if (mediaRecorder2 && mediaRecorder2.state === 'recording') {
+                mediaRecorder2.stop();
+            }
+
+            isRecording = false;
+            recordBtn.classList.remove('recording');
+            recordIcon.classList.remove('fa-square');
+            recordIcon.classList.add('fa-circle');
+            showMessage('Recording stopped. Downloading videos...', 'info');
+            console.log('Recording stopped for both cameras.');
+        }
+
+        // Function to download recorded video
+        function downloadRecordedVideo(chunks, filename) {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            console.log(`Video saved: ${filename}`);
+        }
+
+        // Handle Orientation Change
+        function handleOrientationChange() {
+            if (window.innerHeight > window.innerWidth) {
+                // Landscape mode
+                cameraUi.classList.remove('portrait');
+                cameraUi.classList.add('landscape');
+            } else {
+                // Portrait mode
+                cameraUi.classList.remove('landscape');
+                cameraUi.classList.add('portrait');
+            }
+        }
+
+        // Splash Screen management
+        function showSplashScreen() {
+            splashScreen.classList.remove('fade-out');
+        }
+
+        function hideSplashScreen() {
+            splashScreen.classList.add('fade-out');
+        }
+
+        // PWA detection and prompt for iPhone
+        function isIos() {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(userAgent);
+        }
+
+        function isInStandaloneMode() {
+            // Older iOS detection (still reliable for many cases)
+            if (('standalone' in window.navigator) && (window.navigator.standalone)) {
+                return true;
+            }
+            // Modern PWA detection for broader compatibility (including Android)
+            return window.matchMedia('(display-mode: standalone)').matches;
+        }
+
+        function handlePWAInstallPrompt() {
+            if (isIos() && !isInStandaloneMode()) {
+                loadingSpinner.style.display = 'none'; // Hide spinner
+                pwaPrompt.style.display = 'block';    // Show PWA prompt
+            } else {
+                hideSplashScreen(); // Hide splash screen if not iOS or already in PWA
+            }
+        }
+
+        // Event Listeners
+        camera1Select.addEventListener('change', () => getCameraStream(1));
+        camera2Select.addEventListener('change', () => getCameraStream(2));
+        res1Select.addEventListener('change', () => getCameraStream(1));
+        res2Select.addEventListener('change', () => getCameraStream(2));
+
+        fps1Range.addEventListener('input', () => { fps1Value.textContent = fps1Range.value; });
+        fps2Range.addEventListener('input', () => { fps2Value.textContent = fps2Range.value; });
+        fps1Range.addEventListener('change', () => getCameraStream(1)); // Apply FPS change on release
+        fps2Range.addEventListener('change', () => getCameraStream(2)); // Apply FPS change on release
+
+        recordBtn.addEventListener('click', toggleRecording);
+
+        settingsToggleButton.addEventListener('click', () => {
+            settingsPanel.classList.add('active');
+            appContainer.classList.add('hidden-for-settings'); // Hide main app content
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.remove('active');
+            appContainer.classList.remove('hidden-for-settings'); // Show main app content
+            // Re-apply settings if any were changed and streams need update
+            getCameraStream(1);
+            getCameraStream(2);
+        });
+
+        pwaPromptDismissBtn.addEventListener('click', () => {
+            hideSplashScreen(); // Allow user to dismiss the prompt and proceed to app
+        });
+
+        // Initialize on page load
+        window.onload = () => {
+            showSplashScreen(); // Show splash screen first
+            enumerateDevices(); // Start camera enumeration
+            handleOrientationChange(); // Set initial orientation class
+        };
+
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', handleOrientationChange);
+        // Also listen for resize events in case of browser window resize on desktop
+        window.addEventListener('resize', handleOrientationChange);
+
+
+        // Ensure streams are stopped when navigating away
+        window.addEventListener('beforeunload', () => {
+            if (camera1Stream) {
+                camera1Stream.getTracks().forEach(track => track.stop());
+            }
+            if (camera2Stream) {
+                camera2Stream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        // Listen for PWA mode entry (e.g., if user adds to home screen and re-opens)
+        // This is important to ensure the splash screen correctly disappears
+        // if the user navigates directly to the PWA from the home screen.
+        window.addEventListener('load', () => {
+            if (isInStandaloneMode()) {
+                hideSplashScreen(); // If already in PWA mode on load, hide immediately
+            }
+        });
+    </script>
+</body>
+</html>
