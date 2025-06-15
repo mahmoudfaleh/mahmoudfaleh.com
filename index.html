@@ -959,13 +959,20 @@
 
         pwaPromptDismissBtn.addEventListener('click', () => {
             hideSplashScreen(); // Allow user to dismiss the prompt and proceed to app
+            // After dismissing PWA prompt, if cameras are ready, start the main app logic
+            if (isCameraReady) {
+                // Do nothing, hideSplashScreen already called
+            } else {
+                // If cameras weren't ready, retry enumeration after dismiss
+                enumerateDevices();
+            }
         });
 
         // Initialize on page load
         window.onload = () => {
             showSplashScreen(); // Show splash screen first
-            enumerateDevices(); // Start camera enumeration
             handleOrientationChange(); // Set initial orientation class
+            enumerateDevices(); // Start camera enumeration process
         };
 
         // Listen for orientation changes
@@ -985,8 +992,6 @@
         });
 
         // Listen for PWA mode entry (e.g., if user adds to home screen and re-opens)
-        // This is important to ensure the splash screen correctly disappears
-        // if the user navigates directly to the PWA from the home screen.
         window.addEventListener('load', () => {
             if (isInStandaloneMode()) {
                 hideSplashScreen(); // If already in PWA mode on load, hide immediately
