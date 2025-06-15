@@ -182,6 +182,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            /* Ensure it has a minimum height even if video fails to load */
+            min-height: 200px; /* Adjust as needed */
         }
 
         .main-video {
@@ -656,10 +658,16 @@
 
         // Update UI indicators
         function updateIndicators() {
-            const [width1, height1] = res1Select.value.split('x').map(Number);
-            const fps1 = fps1Range.value;
-            resolutionIndicator.innerHTML = `<i class="fas fa-ruler-combined"></i> ${width1}x${height1}`;
-            fpsIndicator.innerHTML = `<i class="fas fa-tachometer-alt"></i> ${fps1}FPS`;
+            // Check if streams are valid before trying to read track settings
+            if (camera1Stream && camera1Stream.getVideoTracks().length > 0) {
+                const track = camera1Stream.getVideoTracks()[0];
+                const settings = track.getSettings();
+                resolutionIndicator.innerHTML = `<i class="fas fa-ruler-combined"></i> ${settings.width || '--'}x${settings.height || '--'}`;
+                fpsIndicator.innerHTML = `<i class="fas fa-tachometer-alt"></i> ${settings.frameRate || '--'}FPS`;
+            } else {
+                resolutionIndicator.innerHTML = `<i class="fas fa-ruler-combined"></i> --`;
+                fpsIndicator.innerHTML = `<i class="fas fa-tachometer-alt"></i> --`;
+            }
         }
 
         // Function to get camera stream based on selected device and settings
@@ -682,7 +690,7 @@
             if (!deviceId) {
                 console.warn(`No camera selected for camera ${cameraNumber}.`);
                 videoElement.srcObject = null;
-                return;
+                return false; // Indicate failure
             }
 
             const [width, height] = resSelectElement.value.split('x').map(Number);
@@ -699,19 +707,24 @@
             };
 
             try {
+                console.log(`Attempting to get media stream for camera ${cameraNumber} with constraints:`, constraints);
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoElement.srcObject = stream;
-                console.log(`Camera ${cameraNumber} stream initialized with ${width}x${height} at ${frameRate} FPS.`);
+                videoElement.onloadedmetadata = () => {
+                    videoElement.play(); // Ensure video plays once metadata is loaded
+                    updateIndicators(); // Update indicators after video starts playing
+                };
+                console.log(`Camera ${cameraNumber} stream initialized.`);
                 if (cameraNumber === 1) {
                     camera1Stream = stream;
                 } else {
                     camera2Stream = stream;
                 }
-                updateIndicators(); // Update indicators after stream change
+                updateIndicators(); // Update indicators immediately after stream assignment
                 return true; // Indicate success
             } catch (error) {
                 console.error(`Error accessing camera ${cameraNumber}:`, error);
-                showMessage(`Could not access camera ${cameraNumber}. Error: ${error.message}. Please ensure it's not in use and permissions are granted.`, 'error');
+                showMessage(`Could not access camera ${cameraNumber}. Error: ${error.name}: ${error.message}. Please ensure it's not in use and permissions are granted.`, 'error');
                 videoElement.srcObject = null;
                 return false; // Indicate failure
             }
@@ -720,6 +733,7 @@
         // Function to enumerate available media devices (cameras)
         async function enumerateDevices() {
             try {
+                console.log('Enumerating devices...');
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
@@ -729,7 +743,7 @@
 
                 if (videoDevices.length === 0) {
                     showMessage('No video input devices found. Please connect a camera.', 'error');
-                    // Still hide splash after delay even if no cameras
+                    // Hide splash after a delay even if no cameras are found
                     setTimeout(hideSplashScreen, 5000);
                     return;
                 }
@@ -756,7 +770,8 @@
                     showMessage('Only one camera found. Both previews will show the same camera feed.', 'info');
                 }
 
-                // Attempt to get both camera streams
+                // Attempt to get both camera streams in parallel
+                console.log('Attempting to get camera streams...');
                 const results = await Promise.all([
                     getCameraStream(1),
                     getCameraStream(2)
@@ -764,24 +779,25 @@
 
                 if (results[0] && results[1]) { // Both streams successfully acquired
                     isCameraReady = true;
+                    console.log('Both cameras ready.');
                     handlePWAInstallPrompt(); // Check for PWA prompt AFTER cameras are ready
-                    updateIndicators(); // Update indicators with initial values
                 } else {
-                    // If one or both failed, hide splash after a delay
+                    console.log('One or both camera streams failed to load. Showing error and then dismissing splash.');
+                    // If one or both failed, hide splash after a delay, regardless of PWA prompt
                     setTimeout(hideSplashScreen, 5000);
                 }
 
             } catch (error) {
-                console.error('Error enumerating devices:', error);
-                showMessage(`Error enumerating devices: ${error.message}. Please allow camera access.`, 'error');
-                setTimeout(hideSplashScreen, 5000); // Hide splash after delay on error
+                console.error('Error in enumerateDevices:', error);
+                showMessage(`Error initializing cameras: ${error.message}. Please allow camera access.`, 'error');
+                setTimeout(hideSplashScreen, 5000); // Hide splash after delay on any enumeration error
             }
         }
 
         // Function to handle record button click
         function toggleRecording() {
             if (!isCameraReady) {
-                showMessage('Cameras are not ready yet. Please wait.', 'info');
+                showMessage('Cameras are not ready yet. Please wait or check permissions.', 'info');
                 return;
             }
             if (isRecording) {
@@ -910,7 +926,8 @@
         // PWA detection and prompt for iPhone
         function isIos() {
             const userAgent = window.navigator.userAgent.toLowerCase();
-            return /iphone|ipad|ipod/.test(userAgent);
+            // Check for iPad, iPhone, iPod and ensure it's not a Mac (iPadOS can spoof Safari on Mac)
+            return /iphone|ipad|ipod/.test(userAgent) && !/macintosh/.test(userAgent);
         }
 
         function isInStandaloneMode() {
@@ -959,11 +976,8 @@
 
         pwaPromptDismissBtn.addEventListener('click', () => {
             hideSplashScreen(); // Allow user to dismiss the prompt and proceed to app
-            // After dismissing PWA prompt, if cameras are ready, start the main app logic
-            if (isCameraReady) {
-                // Do nothing, hideSplashScreen already called
-            } else {
-                // If cameras weren't ready, retry enumeration after dismiss
+            // After dismissing PWA prompt, ensure camera enumeration proceeds
+            if (!isCameraReady) { // Only re-enumerate if not already ready
                 enumerateDevices();
             }
         });
