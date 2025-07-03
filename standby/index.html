@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="app-title">Custom StandBy</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom CSS for themes and general styling */
+        body {
+            font-family: 'Inter', sans-serif; /* Default font */
+            overflow: hidden; /* Prevent scrolling */
+            transition: background-color 0.5s ease, opacity 0.5s ease, background-image 1s ease, backdrop-filter 0.5s ease;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative; /* Changed to relative for absolute positioning of main content */
+            min-height: 100vh;
+            display: flex; /* Ensure flex for overall layout, but main-content is absolute */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Fullscreen fade effect */
+        body.fade-out {
+            opacity: 0;
+        }
+        body.fade-in {
+            opacity: 1;
+        }
+
+        /* Theme-specific styles */
+        /* Base Dark Theme */
+        .theme-dark {
+            background-color: #000;
+            color: #fff;
+        }
+        .theme-dark .widget {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* iOS Theme: Clean, minimalist, subtle blur, bold time */
+        .theme-ios {
+            background-color: #1c1c1e; /* Deep charcoal */
+            color: #f2f2f7; /* Off-white */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+        .theme-ios #time-display {
+            font-weight: 600; /* Bolder time for iOS */
+            color: #f2f2f7;
+        }
+        .theme-ios .widget {
+            background-color: rgba(28, 28, 30, 0.7); /* Slightly transparent dark */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 12px; /* Standard iOS rounded corners */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Android Theme: Roboto font, subtle shadows, slightly muted colors */
+        .theme-android {
+            background-color: #202124; /* Darker gray */
+            color: #e8eaed; /* Off-white */
+            font-family: 'Roboto', sans-serif;
+        }
+        .theme-android #time-display {
+            font-weight: 300;
+            color: #81C784; /* A soft green accent, common in Android themes */
+        }
+        .theme-android .widget {
+            background-color: #303134; /* Darker gray, less transparent */
+            border-radius: 8px; /* Standard Android rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+
+        /* Windows Phone Theme (simplified): Sharp corners, bold typography, vibrant accents */
+        .theme-windows {
+            background-color: #1a0134; /* Deep purple */
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .theme-windows #time-display {
+            color: #00BCD4; /* Cyan accent, iconic to Windows Phone */
+            font-weight: 700; /* Bold for Windows Phone */
+        }
+        .theme-windows .widget {
+            background-color: #2c025c; /* Darker purple */
+            border-radius: 0; /* Sharp corners, characteristic of Metro UI */
+            border: none;
+            box-shadow: none;
+        }
+
+        /* One UI Theme (Samsung): Very rounded corners, deep dark backgrounds, clear separation */
+        .theme-oneui {
+            background-color: #1a1a1a; /* Very dark gray */
+            color: #ffffff;
+            font-family: 'SamsungOne', 'Roboto', sans-serif; /* Placeholder for SamsungOne */
+        }
+        .theme-oneui #time-display {
+            font-weight: 500;
+            color: #BBDEFB; /* Light blue accent, often seen in One UI */
+        }
+        .theme-oneui .widget {
+            background-color: rgba(26, 26, 26, 0.8); /* Slightly transparent dark */
+            border-radius: 20px; /* Very rounded corners, One UI signature */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Material You Theme (Android 12+): Dynamic, soft, vibrant, large rounded elements */
+        .theme-materialyou {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A); /* Greenish gradient, mimicking dynamic colors */
+            color: #f0f0f0;
+            font-family: 'Google Sans', 'Roboto', sans-serif; /* Placeholder for Google Sans */
+        }
+        .theme-materialyou #time-display {
+            color: #FFF9C4; /* Light yellow accent for contrast */
+            font-weight: 400;
+        }
+        .theme-materialyou .widget {
+            background-color: rgba(255, 255, 255, 0.15); /* Lighter, more transparent */
+            border-radius: 16px; /* Material You roundedness */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+
+        /* iOS Liquid Glass Theme (Simulated): Light, transparent, significant blur */
+        .theme-ios-liquid-glass {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            backdrop-filter: blur(10px); /* Default blur for the body */
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .theme-ios-liquid-glass #time-display {
+            font-weight: 300;
+            color: #E0F7FA; /* Light cyan accent */
+        }
+        .theme-ios-liquid-glass .widget {
+            background-color: rgba(255, 255, 255, 0.1); /* Very transparent */
+            backdrop-filter: blur(20px); /* More blur for widgets to emphasize glass effect */
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Display Area - Positioning controlled by JS classes */
+        .main-display-content {
+            position: absolute;
+            transition: all 0.5s ease; /* Smooth transition for position changes */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 2rem; /* Add padding to prevent content touching edges */
+            box-sizing: border-box;
+        }
+
+        /* Clock Positioning Classes */
+        .pos-center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            align-items: center;
+            justify-content: center;
+        }
+        .pos-top-left {
+            top: 5%;
+            left: 5%;
+            transform: none;
+            align-items: flex-start;
+            justify-content: flex-start;
+            width: auto;
+            height: auto;
+        }
+        .pos-top-right {
+            top: 5%;
+            right: 5%;
+            transform: none;
+            align-items: flex-end;
+            justify-content: flex-start;
+            width: auto;
+            height: auto;
+        }
+        .pos-bottom-left {
+            bottom: 5%;
+            left: 5%;
+            transform: none;
+            align-items: flex-start;
+            justify-content: flex-end;
+            width: auto;
+            height: auto;
+        }
+        .pos-bottom-right {
+            bottom: 5%;
+            right: 5%;
+            transform: none;
+            align-items: flex-end;
+            justify-content: flex-end;
+            width: auto;
+            height: auto;
+        }
+
+        /* Specific styles for time and date */
+        #time-display {
+            font-size: 10rem;
+            letter-spacing: -0.05em;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+            transition: color 0.3s ease;
+        }
+
+        #date-display {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-top: 1rem;
+            opacity: 0.8;
+            transition: color 0.3s ease;
+        }
+
+        /* Brightness overlay */
+        #brightness-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0);
+            pointer-events: none;
+            transition: background-color 0.1s ease-out;
+        }
+
+        /* QoL Controls styling (now includes fullscreen button) */
+        .qol-controls, .settings-modal-content {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .qol-controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 9999px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1000;
+        }
+
+        .qol-controls.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .qol-button {
+            @apply flex items-center justify-center p-3 rounded-full bg-gray-700 text-white text-lg hover:bg-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .qol-button.active {
+            @apply bg-blue-600;
+        }
+
+        .qol-slider {
+            @apply w-32 h-2 bg-gray-600 rounded-full appearance-none cursor-pointer;
+        }
+        .qol-slider::-webkit-slider-thumb {
+            @apply w-5 h-5 bg-blue-500 rounded-full cursor-pointer;
+            -webkit-appearance: none;
+        }
+        .qol-slider::-moz-range-thumb {
+            @apply w-5 h-5 bg-blue-500 rounded-full cursor-pointer;
+        }
+
+        /* Message widget */
+        #message-widget {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            opacity: 0.7;
+            text-align: center;
+            height: 2em; /* Reserve space to prevent CLS */
+            transition: opacity 0.5s ease;
+        }
+
+        /* Modal for messages (e.g., "Copied to clipboard") */
+        .message-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+        .message-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Settings Modal */
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .settings-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-modal-content {
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            border-radius: 1rem;
+            color: white;
+            position: relative;
+            max-height: 90vh; /* Limit height for scrollability */
+            overflow-y: auto; /* Enable scrolling for long content */
+        }
+
+        .settings-modal-content h2 {
+            @apply text-2xl font-bold mb-6 text-center;
+        }
+
+        .settings-modal-content label {
+            @apply block text-lg font-medium mb-2 mt-4;
+        }
+
+        .settings-modal-content input[type="range"],
+        .settings-modal-content input[type="text"] {
+            @apply w-full p-2 rounded-md bg-gray-700 border border-gray-600 text-white;
+        }
+
+        .settings-modal-content .theme-grid {
+            @apply grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4;
+        }
+
+        .settings-modal-content .theme-button {
+            @apply flex flex-col items-center p-4 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-all duration-200 cursor-pointer;
+            border: 2px solid transparent;
+        }
+
+        .settings-modal-content .theme-button.active {
+            @apply border-blue-500 bg-blue-700;
+        }
+
+        .settings-modal-content .theme-button i {
+            @apply text-3xl mb-2;
+        }
+
+        .settings-modal-content .close-btn {
+            @apply absolute top-4 right-4 text-gray-400 hover:text-white text-2xl cursor-pointer;
+        }
+    </style>
+</head>
+<body class="theme-dark select-none">
+
+    <!-- Brightness Overlay -->
+    <div id="brightness-overlay"></div>
+
+    <!-- Main Display Area -->
+    <div id="main-display-content" class="main-display-content pos-center">
+        <div id="time-display" class="font-light"></div>
+        <div id="date-display" class="font-light"></div>
+        <div id="message-widget" class="font-light"></div>
+    </div>
+
+    <!-- Quality of Life Controls -->
+    <div id="qol-controls" class="qol-controls">
+        <!-- Fullscreen Button -->
+        <button id="fullscreen-btn" class="qol-button" aria-label="Toggle Fullscreen">
+            <i class="fas fa-expand"></i>
+        </button>
+        <!-- Copy Time Button -->
+        <button id="copy-time-btn" class="qol-button" aria-label="Copy Time">
+            <i class="fas fa-copy"></i>
+        </button>
+        <!-- Settings Button -->
+        <button id="settings-btn" class="qol-button" aria-label="Open Settings">
+            <i class="fas fa-cog"></i>
+        </button>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="message-modal" class="message-modal"></div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-modal-content">
+            <span class="close-btn" id="close-settings-btn">&times;</span>
+            <h2>Settings</h2>
+
+            <!-- Themes -->
+            <label for="theme-selector">Choose Theme:</label>
+            <div class="theme-grid">
+                <button id="theme-dark" class="theme-button" aria-label="Dark Theme">
+                    <i class="fas fa-moon"></i> Dark
+                </button>
+                <button id="theme-ios" class="theme-button" aria-label="iOS Theme">
+                    <i class="fab fa-apple"></i> iOS
+                </button>
+                <button id="theme-android" class="theme-button" aria-label="Android Theme">
+                    <i class="fab fa-android"></i> Android
+                </button>
+                <button id="theme-windows" class="theme-button" aria-label="Windows Phone Theme">
+                    <i class="fab fa-windows"></i> Windows
+                </button>
+                <button id="theme-oneui" class="theme-button" aria-label="One UI Theme">
+                    <i class="fas fa-mobile-alt"></i> One UI
+                </button>
+                <button id="theme-materialyou" class="theme-button" aria-label="Material You Theme">
+                    <i class="fas fa-palette"></i> Material You
+                </button>
+                <button id="theme-ios-liquid-glass" class="theme-button" aria-label="iOS Liquid Glass Theme">
+                    <i class="fas fa-glass-whiskey"></i> Liquid Glass
+                </button>
+            </div>
+
+            <!-- Brightness Control -->
+            <label for="brightness-slider-settings">Brightness:</label>
+            <div class="flex items-center gap-2">
+                <i class="fas fa-sun text-white"></i>
+                <input type="range" id="brightness-slider-settings" min="0" max="100" value="100" class="qol-slider">
+            </div>
+
+            <!-- Background Blur -->
+            <label for="blur-slider">Background Blur:</label>
+            <div class="flex items-center gap-2">
+                <i class="fas fa-smog text-white"></i>
+                <input type="range" id="blur-slider" min="0" max="20" value="0" class="qol-slider">
+                <span id="blur-value" class="text-white">0px</span>
+            </div>
+
+            <!-- Custom Background Image -->
+            <label for="background-url">Set Single Background Image URL:</label>
+            <input type="text" id="background-url" placeholder="Enter image URL">
+            <button id="apply-background-btn" class="qol-button w-full mt-4">Apply Single Background</button>
+            <button id="clear-background-btn" class="qol-button w-full mt-2 bg-red-600 hover:bg-red-700">Clear Single Background</button>
+
+            <!-- Shuffle Backgrounds Toggle -->
+            <label class="block text-lg font-medium mb-2 mt-4">Shuffle Backgrounds:</label>
+            <div class="flex items-center justify-center">
+                <label for="shuffle-toggle" class="flex items-center cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" id="shuffle-toggle" class="sr-only">
+                        <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
+                        <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                    </div>
+                    <div class="ml-3 text-white font-medium">
+                        <span id="shuffle-status">Off</span>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Clock Position -->
+            <label for="clock-position">Clock Position:</label>
+            <div id="clock-position-options" class="flex flex-wrap gap-4 mt-2 justify-center">
+                <label class="flex items-center cursor-pointer text-sm">
+                    <input type="radio" name="clock-pos" value="pos-center" class="mr-1"> Center
+                </label>
+                <label class="flex items-center cursor-pointer text-sm">
+                    <input type="radio" name="clock-pos" value="pos-top-left" class="mr-1"> Top Left
+                </label>
+                <label class="flex items-center cursor-pointer text-sm">
+                    <input type="radio" name="clock-pos" value="pos-top-right" class="mr-1"> Top Right
+                </label>
+                <label class="flex items-center cursor-pointer text-sm">
+                    <input type="radio" name="clock-pos" value="pos-bottom-left" class="mr-1"> Bottom Left
+                </label>
+                <label class="flex items-center cursor-pointer text-sm">
+                    <input type="radio" name="clock-pos" value="pos-bottom-right" class="mr-1"> Bottom Right
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const appTitle = document.getElementById('app-title');
+        const mainDisplayContent = document.getElementById('main-display-content');
+        const timeDisplay = document.getElementById('time-display');
+        const dateDisplay = document.getElementById('date-display');
+        const messageWidget = document.getElementById('message-widget');
+        const brightnessOverlay = document.getElementById('brightness-overlay');
+        const qolControls = document.getElementById('qol-controls');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const messageModal = document.getElementById('message-modal');
+        const copyTimeBtn = document.getElementById('copy-time-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
+        const brightnessSliderSettings = document.getElementById('brightness-slider-settings');
+        const blurSlider = document.getElementById('blur-slider');
+        const blurValueSpan = document.getElementById('blur-value');
+        const backgroundUrlInput = document.getElementById('background-url');
+        const applyBackgroundBtn = document.getElementById('apply-background-btn');
+        const clearBackgroundBtn = document.getElementById('clear-background-btn');
+        const shuffleToggle = document.getElementById('shuffle-toggle');
+        const shuffleStatus = document.getElementById('shuffle-status');
+        const clockPositionOptions = document.getElementById('clock-position-options');
+
+        // Theme buttons
+        const themeButtons = {
+            'dark': document.getElementById('theme-dark'),
+            'ios': document.getElementById('theme-ios'),
+            'android': document.getElementById('theme-android'),
+            'windows': document.getElementById('theme-windows'),
+            'oneui': document.getElementById('theme-oneui'),
+            'materialyou': document.getElementById('theme-materialyou'),
+            'ios-liquid-glass': document.getElementById('theme-ios-liquid-glass')
+        };
+
+        // State Variables
+        let currentTheme = 'dark';
+        let currentBackgroundUrl = '';
+        let currentBlurValue = 0;
+        let isShuffleActive = false;
+        let currentClockPosition = 'pos-center';
+        // appName is now static, no longer user-editable
+        // let currentAppName = 'Custom StandBy';
+
+        // Shuffle Backgrounds - Large Pool of Images
+        const allShuffleImages = [
+            "https://images.unsplash.com/photo-1501785888041-af3ba6f602d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1495562464102-d961e6793547?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1469854523086-dd02df420281?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw0fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1475924156734-464f6b608dc3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw1fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw2fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1511854447035-e11a3d3c8c7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw3fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1506905925346-21b45017e28f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw4fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1505144808419-cdfd08ff4942?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw5fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1500964757637-ce63bc0400f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1510414842594-a61c69b5ae74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1472214004051-f7614d23253b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMnx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1476610182048-b716b8518a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxM3x8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1470770841094-ef75795f0ed5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1470240731273-75641a37b424?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1501785888041-af3ba6f602d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1495562464102-d961e6793547?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1469854523086-dd02df420281?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw0fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1475924156734-464f6b608dc3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw1fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw2fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1511854447035-e11a3d3c8c7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw3fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1506905925346-21b45017e28f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw4fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1505144808419-cdfd08ff4942?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw5fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1500964757637-ce63bc0400f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1510414842594-a61c69b5ae74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1472214004051-f7614d23253b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMnx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1476610182048-b716b8518a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxM3x8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1470770841094-ef75795f0ed5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
+            "https://images.unsplash.com/photo-1470240731273-75641a37b424?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080"
+        ];
+
+        let activeShuffleImages = []; // The 10-image buffer for current display
+        let imagePoolIndex = 0; // Tracks position in allShuffleImages
+        let currentShuffleImageIndex = 0; // Tracks current image in activeShuffleImages
+        let imagesShownInBatch = 0; // Counts images displayed from current activeShuffleImages batch
+
+        // Messages for the main message widget
+        const messages = [
+            "Good morning!",
+            "Time to focus.",
+            "Stay hydrated!",
+            "You've got this.",
+            "Hello there!",
+            "Enjoy your day.",
+            "Make it a great one.",
+            "Remember to relax.",
+            "Take a deep breath."
+        ];
+        let messageIndex = 0;
+
+        let shuffleInterval;
+
+        /**
+         * Preloads an image to ensure smooth transitions.
+         * @param {string} url - The URL of the image to preload.
+         */
+        function preloadImage(url) {
+            if (url) {
+                const img = new Image();
+                img.src = url;
+                img.onerror = () => console.warn(`Failed to preload image: ${url}`);
+                // console.log(`Preloading image: ${url}`); // Can be noisy, uncomment for debugging
+            }
+        }
+
+        /**
+         * Loads the next batch of 10 images into activeShuffleImages and preloads them.
+         * This function ensures a continuous supply of images for the shuffle.
+         */
+        function loadNextBatchOfImages() {
+            // If the active pool is empty or we've shown 5 images from the current batch,
+            // or if we are just starting, load a new batch.
+            if (activeShuffleImages.length === 0 || imagesShownInBatch >= 5) {
+                const batchSize = 10;
+                const newImages = [];
+
+                for (let i = 0; i < batchSize; i++) {
+                    // Cycle through allShuffleImages to get new images
+                    const imageUrl = allShuffleImages[imagePoolIndex % allShuffleImages.length];
+                    newImages.push(imageUrl);
+                    preloadImage(imageUrl); // Preload the image as soon as we get its URL
+                    imagePoolIndex++;
+                }
+
+                // Replace the active images with the new batch
+                activeShuffleImages = newImages;
+                currentShuffleImageIndex = 0; // Reset index for the new batch
+                imagesShownInBatch = 0; // Reset counter for the new batch
+                console.log(`Loaded new batch of ${batchSize} images. Next pool index: ${imagePoolIndex}`);
+            }
+        }
+
+
+        /**
+         * Saves current settings to local storage.
+         */
+        function saveSettings() {
+            const settings = {
+                theme: currentTheme,
+                brightness: brightnessSliderSettings.value,
+                blur: blurSlider.value,
+                backgroundUrl: currentBackgroundUrl,
+                isShuffleActive: isShuffleActive,
+                clockPosition: currentClockPosition
+            };
+            localStorage.setItem('standbyAppSettings', JSON.stringify(settings));
+        }
+
+        /**
+         * Loads settings from local storage.
+         */
+        function loadSettings() {
+            const savedSettings = JSON.parse(localStorage.getItem('standbyAppSettings'));
+            if (savedSettings) {
+                currentTheme = savedSettings.theme || 'dark';
+                brightnessSliderSettings.value = savedSettings.brightness !== undefined ? savedSettings.brightness : 100;
+                currentBlurValue = savedSettings.blur !== undefined ? savedSettings.blur : 0;
+                currentBackgroundUrl = savedSettings.backgroundUrl || '';
+                // Make shuffle active by default if not explicitly set to false
+                isShuffleActive = savedSettings.isShuffleActive !== undefined ? savedSettings.isShuffleActive : true;
+                currentClockPosition = savedSettings.clockPosition || 'pos-center';
+
+                // Apply loaded settings
+                applyTheme(currentTheme);
+                adjustBrightness(brightnessSliderSettings.value);
+                applyBlur(currentBlurValue);
+                applyClockPosition(currentClockPosition);
+
+                if (isShuffleActive) {
+                    startShuffleBackgrounds();
+                    shuffleToggle.checked = true;
+                    shuffleStatus.textContent = 'On';
+                } else if (currentBackgroundUrl) {
+                    applyCustomBackground(currentBackgroundUrl);
+                }
+                backgroundUrlInput.value = currentBackgroundUrl;
+            } else {
+                // If no settings are saved, set shuffle to active by default
+                isShuffleActive = true;
+                startShuffleBackgrounds();
+                shuffleToggle.checked = true;
+                shuffleStatus.textContent = 'On';
+                saveSettings(); // Save the default active state
+            }
+        }
+
+        /**
+         * Shows a temporary message modal.
+         * @param {string} message - The message to display.
+         */
+        function showMessageModal(message) {
+            messageModal.textContent = message;
+            messageModal.classList.add('show');
+            setTimeout(() => {
+                messageModal.classList.remove('show');
+            }, 1500); // Hide after 1.5 seconds
+        }
+
+        /**
+         * Updates the time and date display.
+         */
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // The hour '0' should be '12'
+            const timeString = `${hours}:${minutes}`;
+            timeDisplay.textContent = timeString;
+            // Removed emulator time update
+        }
+
+        /**
+         * Updates the message widget.
+         */
+        function updateMessageWidget() {
+            const currentMessage = messages[messageIndex];
+            messageWidget.textContent = currentMessage;
+            // Removed emulator message update
+            messageIndex = (messageIndex + 1) % messages.length;
+        }
+
+        /**
+         * Renders a "Today's Date" widget.
+         */
+        function renderTodaysDateWidget(targetElement) {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const todayDate = now.toLocaleDateString('en-US', options);
+
+            targetElement.innerHTML += `
+                <div class="widget date-info-widget">
+                    <h3>Today</h3>
+                    <i class="fas fa-calendar-day icon"></i>
+                    <p class="text-lg">${todayDate}</p>
+                </div>
+            `;
+        }
+
+        /**
+         * Renders all widgets based on the current theme.
+         */
+        function renderWidgets() {
+            // Widgets container removed from HTML, so this function does nothing for now
+            // widgetsContainer.innerHTML = '';
+            // emulatorWidgetsContainer.innerHTML = '';
+            // renderTodaysDateWidget(widgetsContainer);
+            // renderTodaysDateWidget(emulatorWidgetsContainer);
+        }
+
+        /**
+         * Applies the selected theme to the body.
+         * @param {string} themeName - The name of the theme (e.g., 'ios', 'android', 'dark').
+         */
+        function applyTheme(themeName) {
+            // Remove all existing theme classes
+            for (const themeKey in themeButtons) {
+                document.body.classList.remove(`theme-${themeKey}`);
+            }
+            // Add the new theme class
+            document.body.classList.add(`theme-${themeName}`);
+            currentTheme = themeName;
+            updateActiveThemeButton();
+            // renderWidgets(); // Re-render widgets with new theme styles - now removed
+
+            // Special handling for iOS Liquid Glass to ensure blur is applied by default
+            if (themeName === 'ios-liquid-glass') {
+                document.body.style.backdropFilter = 'blur(10px)';
+                document.body.style.webkitBackdropFilter = 'blur(10px)';
+                blurSlider.value = 10; // Set slider to match
+                blurValueSpan.textContent = '10px';
+                currentBlurValue = 10;
+            } else {
+                // If switching from iOS Liquid Glass, reset backdrop-filter if blur is 0
+                if (parseInt(blurSlider.value) === 0) {
+                    document.body.style.backdropFilter = 'none';
+                    document.body.style.webkitBackdropFilter = 'none';
+                }
+            }
+            saveSettings(); // Save theme change
+        }
+
+        /**
+         * Updates the active state of theme buttons in the settings modal.
+         */
+        function updateActiveThemeButton() {
+            for (const themeKey in themeButtons) {
+                themeButtons[themeKey].classList.remove('active');
+            }
+            if (themeButtons[currentTheme]) {
+                themeButtons[currentTheme].classList.add('active');
+            }
+        }
+
+        /**
+         * Adjusts the brightness of the display using an overlay.
+         * @param {number} value - Brightness value from 0 (darkest) to 100 (brightest).
+         */
+        function adjustBrightness(value) {
+            // Invert the value for the overlay opacity (0 = no overlay, 1 = full overlay)
+            const opacity = 1 - (value / 100);
+            brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+            saveSettings(); // Save brightness change
+        }
+
+        /**
+         * Toggles fullscreen mode with a fade effect.
+         */
+        async function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.body.classList.add('fade-out'); // Start fade out
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait for fade
+
+                document.documentElement.requestFullscreen().catch(e => {
+                    console.error(`Error attempting to enable full-screen mode: ${e.message} (${e.name})`);
+                    showMessageModal("Fullscreen not supported or allowed.");
+                });
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                document.body.classList.remove('fade-out');
+                document.body.classList.add('fade-in'); // Fade in once fullscreen
+            } else {
+                document.body.classList.add('fade-out'); // Start fade out
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait for fade
+
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                document.body.classList.remove('fade-out');
+                document.body.classList.add('fade-in'); // Fade in once exited
+            }
+        }
+
+        /**
+         * Copies the current time to the clipboard.
+         */
+        function copyTimeToClipboard() {
+            const timeText = timeDisplay.textContent;
+            // Using document.execCommand('copy') for better iframe compatibility
+            const tempInput = document.createElement('textarea');
+            tempInput.value = timeText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showMessageModal("Time copied!");
+                } else {
+                    showMessageModal("Failed to copy time.");
+                }
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                showMessageModal("Failed to copy time.");
+            } finally {
+                document.body.removeChild(tempInput);
+            }
+        }
+
+        /**
+         * Opens the settings modal.
+         */
+        function openSettings() {
+            settingsModal.classList.add('show');
+            // Ensure brightness slider in settings reflects current brightness
+            brightnessSliderSettings.value = 100 - (parseFloat(brightnessOverlay.style.backgroundColor.match(/rgba\(0, 0, 0, ([\d.]+)\)/)?.[1] || 0) * 100);
+            // Ensure blur slider reflects current blur
+            blurSlider.value = currentBlurValue;
+            blurValueSpan.textContent = `${currentBlurValue}px`;
+            // Ensure Shuffle toggle reflects current state
+            shuffleToggle.checked = isShuffleActive;
+            shuffleStatus.textContent = isShuffleActive ? 'On' : 'Off';
+            // Ensure background URL input reflects current custom background
+            backgroundUrlInput.value = currentBackgroundUrl;
+            // Set the correct radio button for clock position
+            document.querySelector(`input[name="clock-pos"][value="${currentClockPosition}"]`).checked = true;
+        }
+
+        /**
+         * Closes the settings modal.
+         */
+        function closeSettings() {
+            settingsModal.classList.remove('show');
+        }
+
+        /**
+         * Applies a blur effect to the body's backdrop.
+         * @param {number} value - Blur value in pixels.
+         */
+        function applyBlur(value) {
+            currentBlurValue = value;
+            document.body.style.backdropFilter = `blur(${value}px)`;
+            document.body.style.webkitBackdropFilter = `blur(${value}px)`; // For Webkit browsers
+            blurValueSpan.textContent = `${value}px`;
+            saveSettings(); // Save blur change
+        }
+
+        /**
+         * Applies a custom background image.
+         * @param {string} url - The URL of the background image.
+         */
+        function applyCustomBackground(url) {
+            if (url) {
+                document.body.style.backgroundImage = `url('${url}')`;
+                currentBackgroundUrl = url;
+                // Stop Shuffle backgrounds if a custom one is applied
+                if (shuffleInterval) {
+                    clearInterval(shuffleInterval);
+                    shuffleInterval = null;
+                    isShuffleActive = false;
+                    shuffleToggle.checked = false;
+                    shuffleStatus.textContent = 'Off';
+                }
+                showMessageModal("Single background applied!");
+            } else {
+                showMessageModal("Please enter a valid URL.");
+            }
+            saveSettings(); // Save background change
+        }
+
+        /**
+         * Clears the custom background image.
+         */
+        function clearCustomBackground() {
+            document.body.style.backgroundImage = 'none';
+            currentBackgroundUrl = '';
+            backgroundUrlInput.value = ''; // Clear the input field
+            showMessageModal("Single background cleared!");
+            saveSettings(); // Save background change
+        }
+
+        /**
+         * Starts the Shuffle background rotation.
+         */
+        function startShuffleBackgrounds() {
+            if (allShuffleImages.length === 0) {
+                showMessageModal("No shuffle images available!");
+                shuffleToggle.checked = false;
+                shuffleStatus.textContent = 'Off';
+                return;
+            }
+            if (shuffleInterval) return; // Already running
+
+            // Initial load of the first batch
+            loadNextBatchOfImages();
+            document.body.style.backgroundImage = `url('${activeShuffleImages[currentShuffleImageIndex]}')`;
+            imagesShownInBatch++;
+
+            shuffleInterval = setInterval(() => {
+                currentShuffleImageIndex = (currentShuffleImageIndex + 1) % activeShuffleImages.length;
+                document.body.style.backgroundImage = `url('${activeShuffleImages[currentShuffleImageIndex]}')`;
+                imagesShownInBatch++;
+
+                // Load next batch if 5 images from current batch have been shown
+                if (imagesShownInBatch >= 5) {
+                    loadNextBatchOfImages();
+                }
+            }, 30000); // Change every 30 seconds
+
+            isShuffleActive = true;
+            // Clear custom background URL if Shuffle is enabled
+            currentBackgroundUrl = '';
+            backgroundUrlInput.value = '';
+            showMessageModal("Shuffle backgrounds started!");
+            saveSettings(); // Save Shuffle state
+        }
+
+        /**
+         * Stops the Shuffle background rotation.
+         */
+        function stopShuffleBackgrounds() {
+            if (shuffleInterval) {
+                clearInterval(shuffleInterval);
+                shuffleInterval = null;
+                document.body.style.backgroundImage = 'none'; // Clear the background
+                isShuffleActive = false;
+                showMessageModal("Shuffle backgrounds stopped!");
+            }
+            saveSettings(); // Save Shuffle state
+        }
+
+        /**
+         * Applies the selected clock position class to the main display content.
+         * @param {string} positionClass - The CSS class for the desired position (e.g., 'pos-center').
+         */
+        function applyClockPosition(positionClass) {
+            // Remove all existing position classes
+            mainDisplayContent.classList.remove('pos-center', 'pos-top-left', 'pos-top-right', 'pos-bottom-left', 'pos-bottom-right');
+            // Add the new position class
+            mainDisplayContent.classList.add(positionClass);
+            currentClockPosition = positionClass;
+            saveSettings(); // Save clock position change
+        }
+
+        // Removed: openEmulator, closeEmulator, toggleEmulatorOrientation functions
+
+        // Event Listeners
+        window.onload = function() {
+            loadSettings(); // Load settings on startup
+
+            // Initial update
+            updateTime();
+            updateMessageWidget();
+            // renderWidgets(); // Initial render of widgets - removed as no widgets are displayed
+
+            // Update time every second
+            setInterval(updateTime, 1000);
+            // Update message every 10 seconds
+            setInterval(updateMessageWidget, 10000);
+
+            // Show QoL controls on mouse movement
+            let controlsTimeout;
+            document.addEventListener('mousemove', () => {
+                qolControls.classList.add('visible');
+                clearTimeout(controlsTimeout);
+                controlsTimeout = setTimeout(() => {
+                    qolControls.classList.remove('visible');
+                }, 3000); // Hide after 3 seconds of inactivity
+            });
+
+            // Keep controls visible if mouse is over them
+            qolControls.addEventListener('mouseenter', () => {
+                clearTimeout(controlsTimeout);
+            });
+            qolControls.addEventListener('mouseleave', () => {
+                controlsTimeout = setTimeout(() => {
+                    qolControls.classList.remove('visible');
+                }, 3000);
+            });
+
+            // Brightness slider in settings event
+            brightnessSliderSettings.addEventListener('input', (event) => {
+                adjustBrightness(event.target.value);
+            });
+
+            // Blur slider event
+            blurSlider.addEventListener('input', (event) => {
+                applyBlur(event.target.value);
+            });
+
+            // Custom background image events
+            applyBackgroundBtn.addEventListener('click', () => applyCustomBackground(backgroundUrlInput.value));
+            clearBackgroundBtn.addEventListener('click', clearCustomBackground);
+
+            // Shuffle toggle event
+            shuffleToggle.addEventListener('change', (event) => {
+                if (event.target.checked) {
+                    startShuffleBackgrounds();
+                } else {
+                    stopShuffleBackgrounds();
+                }
+                shuffleStatus.textContent = event.target.checked ? 'On' : 'Off';
+            });
+
+            // Fullscreen button event
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+            // Copy time button event
+            copyTimeBtn.addEventListener('click', copyTimeToClipboard);
+
+            // Settings button events
+            settingsBtn.addEventListener('click', openSettings);
+            closeSettingsBtn.addEventListener('click', closeSettings);
+
+            // Theme button events (delegated from settings modal)
+            for (const themeKey in themeButtons) {
+                themeButtons[themeKey].addEventListener('click', () => applyTheme(themeKey));
+            }
+
+            // Clock position radio button events
+            clockPositionOptions.addEventListener('change', (event) => {
+                if (event.target.name === 'clock-pos') {
+                    applyClockPosition(event.target.value);
+                }
+            });
+
+            // Removed emulator button events
+        };
+
+        // Handle fullscreen change to update button icon and fade effect
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+            // Ensure fade-in class is applied after fullscreen change completes
+            document.body.classList.remove('fade-out');
+            document.body.classList.add('fade-in');
+        });
+    </script>
+</body>
+</html>
