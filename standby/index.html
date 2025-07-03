@@ -14,12 +14,12 @@
             font-family: 'Inter', sans-serif; /* Default font */
             overflow: hidden; /* Prevent scrolling */
             transition: background-color 0.5s ease, opacity 0.5s ease, background-image 1s ease, backdrop-filter 0.5s ease;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            position: relative; /* Changed to relative for absolute positioning of main content */
+            background-size: cover; /* Ensure image stretches to cover the full background */
+            background-position: center; /* Center the background image */
+            background-repeat: no-repeat; /* Prevent image repetition */
+            position: relative;
             min-height: 100vh;
-            display: flex; /* Ensure flex for overall layout, but main-content is absolute */
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -552,42 +552,9 @@
         let currentBlurValue = 0;
         let isShuffleActive = false;
         let currentClockPosition = 'pos-center';
-        // appName is now static, no longer user-editable
-        // let currentAppName = 'Custom StandBy';
 
         // Shuffle Backgrounds - Large Pool of Images
-        const allShuffleImages = [
-            "https://images.unsplash.com/photo-1501785888041-af3ba6f602d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1495562464102-d961e6793547?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1469854523086-dd02df420281?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw0fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1475924156734-464f6b608dc3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw1fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw2fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1511854447035-e11a3d3c8c7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw3fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1506905925346-21b45017e28f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw4fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1505144808419-cdfd08ff4942?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw5fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1500964757637-ce63bc0400f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1510414842594-a61c69b5ae74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1472214004051-f7614d23253b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMnx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1476610182048-b716b8518a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxM3x8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1470770841094-ef75795f0ed5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1470240731273-75641a37b424?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1501785888041-af3ba6f602d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1495562464102-d961e6793547?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwzfHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1469854523086-dd02df420281?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw0fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1475924156734-464f6b608dc3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw1fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw2fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1511854447035-e11a3d3c8c7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw3fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1506905925346-21b45017e28f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw4fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1505144808419-cdfd08ff4942?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHw5fHxsYW5kc2NhcGUlMjBhd2Vzb21lfGVufDB8fHx8MTcwMTU1NDc3Mnww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1500964757637-ce63bc0400f9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1510414842594-a61c69b5ae74?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1472214004051-f7614d23253b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxMnx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1476610182048-b716b8518a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxM3x8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1470770841094-ef75795f0ed5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNHx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080",
-            "https://images.unsplash.com/photo-1470240731273-75641a37b424?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MDcxMzJ8MHwxfHNlYXJjaHwxNXx8bGFuZHNjYXBlJTIwYXdlc29tZXxlbnwwfHx8fDE3MDE1NTQ3NzJww&ixlib=rb-4.0.3&q=80&w=1080"
-        ];
+        let allShuffleImages = []; // This will be populated from photos.json
 
         let activeShuffleImages = []; // The 10-image buffer for current display
         let imagePoolIndex = 0; // Tracks position in allShuffleImages
@@ -611,15 +578,35 @@
         let shuffleInterval;
 
         /**
-         * Preloads an image to ensure smooth transitions.
-         * @param {string} url - The URL of the image to preload.
+         * Preloads and validates an image. Returns a Promise that resolves with the URL
+         * if the image is valid (HTTP 200 OK) and rejects otherwise.
+         * @param {string} url - The URL of the image to preload and validate.
+         * @returns {Promise<string>} A promise that resolves with the image URL or rejects on error.
          */
-        function preloadImage(url) {
-            if (url) {
-                const img = new Image();
-                img.src = url;
-                img.onerror = () => console.warn(`Failed to preload image: ${url}`);
-                // console.log(`Preloading image: ${url}`); // Can be noisy, uncomment for debugging
+        async function validateAndPreloadImage(url) {
+            if (!url) {
+                return Promise.reject("Empty URL provided for preloading.");
+            }
+            try {
+                // Use HEAD request to check existence without downloading full image
+                const response = await fetch(url, { method: 'HEAD' });
+                if (response.ok) {
+                    const img = new Image();
+                    img.src = url;
+                    return new Promise((resolve, reject) => {
+                        img.onload = () => resolve(url);
+                        img.onerror = () => {
+                            console.warn(`Failed to load image: ${url}`);
+                            reject(`Image load error: ${url}`);
+                        };
+                    });
+                } else {
+                    console.warn(`Image URL returned status ${response.status}: ${url}`);
+                    return Promise.reject(`HTTP error ${response.status}: ${url}`);
+                }
+            } catch (error) {
+                console.error(`Error validating image ${url}:`, error);
+                return Promise.reject(`Fetch error: ${error.message}`);
             }
         }
 
@@ -627,26 +614,53 @@
          * Loads the next batch of 10 images into activeShuffleImages and preloads them.
          * This function ensures a continuous supply of images for the shuffle.
          */
-        function loadNextBatchOfImages() {
-            // If the active pool is empty or we've shown 5 images from the current batch,
-            // or if we are just starting, load a new batch.
+        async function loadNextBatchOfImages() {
+            // Only load a new batch if the current active batch is empty or nearly exhausted
             if (activeShuffleImages.length === 0 || imagesShownInBatch >= 5) {
                 const batchSize = 10;
-                const newImages = [];
+                const potentialNewImages = [];
+                const validNewImages = [];
 
+                // Collect URLs for the next batch
                 for (let i = 0; i < batchSize; i++) {
                     // Cycle through allShuffleImages to get new images
                     const imageUrl = allShuffleImages[imagePoolIndex % allShuffleImages.length];
-                    newImages.push(imageUrl);
-                    preloadImage(imageUrl); // Preload the image as soon as we get its URL
+                    potentialNewImages.push(imageUrl);
                     imagePoolIndex++;
                 }
 
-                // Replace the active images with the new batch
-                activeShuffleImages = newImages;
+                // Validate and preload images concurrently
+                const preloadPromises = potentialNewImages.map(url => validateAndPreloadImage(url)
+                    .then(validUrl => {
+                        validNewImages.push(validUrl); // Add to valid list only if successful
+                        return validUrl;
+                    })
+                    .catch(error => {
+                        // Error already logged in validateAndPreloadImage
+                        return null; // Return null for failed images
+                    })
+                );
+
+                // Wait for all preloads/validations to complete
+                await Promise.allSettled(preloadPromises);
+
+                // Filter out any nulls (failed images) and shuffle the valid images
+                activeShuffleImages = validNewImages.filter(url => url !== null);
+                // Optional: Shuffle the new batch to ensure variety if not already random from pool
+                for (let i = activeShuffleImages.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [activeShuffleImages[i], activeShuffleImages[j]] = [activeShuffleImages[j], activeShuffleImages[i]];
+                }
+
                 currentShuffleImageIndex = 0; // Reset index for the new batch
                 imagesShownInBatch = 0; // Reset counter for the new batch
-                console.log(`Loaded new batch of ${batchSize} images. Next pool index: ${imagePoolIndex}`);
+                console.log(`Loaded new batch of ${activeShuffleImages.length} valid images. Next pool index: ${imagePoolIndex}`);
+
+                if (activeShuffleImages.length === 0) {
+                    console.warn("No valid images found in the current batch. Shuffle backgrounds might stop.");
+                    showMessageModal("No valid shuffle images found!");
+                    stopShuffleBackgrounds(); // Stop shuffle if no valid images
+                }
             }
         }
 
@@ -728,7 +742,10 @@
             hours = hours ? hours : 12; // The hour '0' should be '12'
             const timeString = `${hours}:${minutes}`;
             timeDisplay.textContent = timeString;
-            // Removed emulator time update
+
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('en-US', options);
+            dateDisplay.textContent = dateString; // Date is now explicitly displayed
         }
 
         /**
@@ -737,36 +754,7 @@
         function updateMessageWidget() {
             const currentMessage = messages[messageIndex];
             messageWidget.textContent = currentMessage;
-            // Removed emulator message update
             messageIndex = (messageIndex + 1) % messages.length;
-        }
-
-        /**
-         * Renders a "Today's Date" widget.
-         */
-        function renderTodaysDateWidget(targetElement) {
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const todayDate = now.toLocaleDateString('en-US', options);
-
-            targetElement.innerHTML += `
-                <div class="widget date-info-widget">
-                    <h3>Today</h3>
-                    <i class="fas fa-calendar-day icon"></i>
-                    <p class="text-lg">${todayDate}</p>
-                </div>
-            `;
-        }
-
-        /**
-         * Renders all widgets based on the current theme.
-         */
-        function renderWidgets() {
-            // Widgets container removed from HTML, so this function does nothing for now
-            // widgetsContainer.innerHTML = '';
-            // emulatorWidgetsContainer.innerHTML = '';
-            // renderTodaysDateWidget(widgetsContainer);
-            // renderTodaysDateWidget(emulatorWidgetsContainer);
         }
 
         /**
@@ -782,7 +770,6 @@
             document.body.classList.add(`theme-${themeName}`);
             currentTheme = themeName;
             updateActiveThemeButton();
-            // renderWidgets(); // Re-render widgets with new theme styles - now removed
 
             // Special handling for iOS Liquid Glass to ensure blur is applied by default
             if (themeName === 'ios-liquid-glass') {
@@ -1010,16 +997,28 @@
             saveSettings(); // Save clock position change
         }
 
-        // Removed: openEmulator, closeEmulator, toggleEmulatorOrientation functions
-
         // Event Listeners
-        window.onload = function() {
-            loadSettings(); // Load settings on startup
+        window.onload = async function() { // Made async to support fetch
+            // Fetch photos.json
+            try {
+                const response = await fetch('photos.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                allShuffleImages = await response.json();
+                console.log("Photos loaded from photos.json:", allShuffleImages);
+            } catch (error) {
+                console.error("Could not load photos.json:", error);
+                showMessageModal("Failed to load background images from photos.json.");
+                // Fallback or handle appropriately if JSON fails to load
+                // In this case, allShuffleImages will remain empty, and shuffle won't start.
+            }
+            
+            loadSettings(); // Load settings on startup, which will now trigger shuffle by default
 
             // Initial update
             updateTime();
             updateMessageWidget();
-            // renderWidgets(); // Initial render of widgets - removed as no widgets are displayed
 
             // Update time every second
             setInterval(updateTime, 1000);
@@ -1091,8 +1090,6 @@
                     applyClockPosition(event.target.value);
                 }
             });
-
-            // Removed emulator button events
         };
 
         // Handle fullscreen change to update button icon and fade effect
