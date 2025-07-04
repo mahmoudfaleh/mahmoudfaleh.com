@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="app-title">Custom StandBy</title>
+    <title id="app-title">StandBy++</title>
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="/manifest.json">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
@@ -33,6 +35,11 @@
             opacity: 1;
         }
 
+        /* Hide fullscreen button when in PWA standalone/fullscreen mode */
+        body.pwa-display #fullscreen-btn {
+            display: none;
+        }
+
         /* Theme-specific styles */
         /* Base Dark Theme */
         .theme-dark {
@@ -41,8 +48,8 @@
         }
         .theme-dark .widget {
             background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none; /* Removed border */
         }
 
         /* iOS Theme: Clean, minimalist, subtle blur, bold time */
@@ -60,8 +67,8 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border-radius: 12px; /* Standard iOS rounded corners */
-            border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: none; /* Removed border */
         }
 
         /* Android Theme: Roboto font, subtle shadows, slightly muted colors */
@@ -94,8 +101,8 @@
         .theme-windows .widget {
             background-color: #2c025c; /* Darker purple */
             border-radius: 0; /* Sharp corners, characteristic of Metro UI */
-            border: none;
             box-shadow: none;
+            border: none;
         }
 
         /* One UI Theme (Samsung): Very rounded corners, deep dark backgrounds, clear separation */
@@ -111,8 +118,8 @@
         .theme-oneui .widget {
             background-color: rgba(26, 26, 26, 0.8); /* Slightly transparent dark */
             border-radius: 20px; /* Very rounded corners, One UI signature */
-            border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border: none; /* Removed border */
         }
 
         /* Material You Theme (Android 12+): Dynamic, soft, vibrant, large rounded elements */
@@ -149,8 +156,8 @@
             backdrop-filter: blur(20px); /* More blur for widgets to emphasize glass effect */
             -webkit-backdrop-filter: blur(20px);
             border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: none; /* Removed border */
         }
 
         /* Main Display Area - Positioning controlled by JS classes */
@@ -229,6 +236,21 @@
             transition: color 0.3s ease;
         }
 
+        /* Opaque box behind clock text */
+        .clock-background-box {
+            background-color: rgba(0, 0, 0, 0.3); /* Slightly opaque black */
+            padding: 2rem 3rem;
+            border-radius: 1.5rem; /* Rounded corners for the box */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            max-width: 90%; /* Ensure it doesn't get too wide on large screens */
+            box-sizing: border-box;
+        }
+
+
         /* Brightness overlay */
         #brightness-overlay {
             position: fixed;
@@ -246,8 +268,8 @@
             background-color: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border: none; /* Removed border */
         }
 
         .qol-controls {
@@ -396,8 +418,11 @@
 
     <!-- Main Display Area -->
     <div id="main-display-content" class="main-display-content pos-center">
-        <div id="time-display" class="font-light"></div>
-        <div id="date-display" class="font-light"></div>
+        <!-- Opaque box behind clock text -->
+        <div class="clock-background-box">
+            <div id="time-display" class="font-light"></div>
+            <div id="date-display" class="font-light"></div>
+        </div>
         <div id="message-widget" class="font-light"></div>
     </div>
 
@@ -779,13 +804,15 @@
                 blurValueSpan.textContent = '10px';
                 currentBlurValue = 10;
             } else {
-                // If switching from iOS Liquid Glass, reset backdrop-filter if blur is 0
-                if (parseInt(blurSlider.value) === 0) {
-                    document.body.style.backdropFilter = 'none';
-                    document.body.style.webkitBackdropFilter = 'none';
+                // If switching from iOS Liquid Glass, reset body blur if it was only for that theme
+                if (document.body.classList.contains('theme-ios-liquid-glass')) {
+                    document.body.style.backdropFilter = '';
+                    document.body.style.webkitBackdropFilter = '';
                 }
+                // Re-apply the currentBlurValue from settings or default
+                applyBlur(currentBlurValue);
             }
-            saveSettings(); // Save theme change
+            saveSettings();
         }
 
         /**
@@ -793,134 +820,50 @@
          */
         function updateActiveThemeButton() {
             for (const themeKey in themeButtons) {
-                themeButtons[themeKey].classList.remove('active');
-            }
-            if (themeButtons[currentTheme]) {
-                themeButtons[currentTheme].classList.add('active');
+                if (themeButtons[themeKey]) {
+                    if (themeKey === currentTheme) {
+                        themeButtons[themeKey].classList.add('active');
+                    } else {
+                        themeButtons[themeKey].classList.remove('active');
+                    }
+                }
             }
         }
 
         /**
-         * Adjusts the brightness of the display using an overlay.
-         * @param {number} value - Brightness value from 0 (darkest) to 100 (brightest).
+         * Adjusts the overall brightness of the display.
+         * @param {number} value - Brightness percentage (0-100).
          */
         function adjustBrightness(value) {
-            // Invert the value for the overlay opacity (0 = no overlay, 1 = full overlay)
-            const opacity = 1 - (value / 100);
+            const opacity = 1 - (value / 100); // 100% brightness = 0 opacity (no overlay)
             brightnessOverlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
-            saveSettings(); // Save brightness change
+            saveSettings();
         }
 
         /**
-         * Toggles fullscreen mode with a fade effect.
-         */
-        async function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.body.classList.add('fade-out'); // Start fade out
-                await new Promise(resolve => setTimeout(resolve, 500)); // Wait for fade
-
-                document.documentElement.requestFullscreen().catch(e => {
-                    console.error(`Error attempting to enable full-screen mode: ${e.message} (${e.name})`);
-                    showMessageModal("Fullscreen not supported or allowed.");
-                });
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-                document.body.classList.remove('fade-out');
-                document.body.classList.add('fade-in'); // Fade in once fullscreen
-            } else {
-                document.body.classList.add('fade-out'); // Start fade out
-                await new Promise(resolve => setTimeout(resolve, 500)); // Wait for fade
-
-                document.exitFullscreen();
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-                document.body.classList.remove('fade-out');
-                document.body.classList.add('fade-in'); // Fade in once exited
-            }
-        }
-
-        /**
-         * Copies the current time to the clipboard.
-         */
-        function copyTimeToClipboard() {
-            const timeText = timeDisplay.textContent;
-            // Using document.execCommand('copy') for better iframe compatibility
-            const tempInput = document.createElement('textarea');
-            tempInput.value = timeText;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showMessageModal("Time copied!");
-                } else {
-                    showMessageModal("Failed to copy time.");
-                }
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-                showMessageModal("Failed to copy time.");
-            } finally {
-                document.body.removeChild(tempInput);
-            }
-        }
-
-        /**
-         * Opens the settings modal.
-         */
-        function openSettings() {
-            settingsModal.classList.add('show');
-            // Ensure brightness slider in settings reflects current brightness
-            brightnessSliderSettings.value = 100 - (parseFloat(brightnessOverlay.style.backgroundColor.match(/rgba\(0, 0, 0, ([\d.]+)\)/)?.[1] || 0) * 100);
-            // Ensure blur slider reflects current blur
-            blurSlider.value = currentBlurValue;
-            blurValueSpan.textContent = `${currentBlurValue}px`;
-            // Ensure Shuffle toggle reflects current state
-            shuffleToggle.checked = isShuffleActive;
-            shuffleStatus.textContent = isShuffleActive ? 'On' : 'Off';
-            // Ensure background URL input reflects current custom background
-            backgroundUrlInput.value = currentBackgroundUrl;
-            // Set the correct radio button for clock position
-            document.querySelector(`input[name="clock-pos"][value="${currentClockPosition}"]`).checked = true;
-        }
-
-        /**
-         * Closes the settings modal.
-         */
-        function closeSettings() {
-            settingsModal.classList.remove('show');
-        }
-
-        /**
-         * Applies a blur effect to the body's backdrop.
-         * @param {number} value - Blur value in pixels.
+         * Applies a blur effect to the background.
+         * @param {number} value - Blur amount in pixels.
          */
         function applyBlur(value) {
-            currentBlurValue = value;
             document.body.style.backdropFilter = `blur(${value}px)`;
-            document.body.style.webkitBackdropFilter = `blur(${value}px)`; // For Webkit browsers
+            document.body.style.webkitBackdropFilter = `blur(${value}px)`;
             blurValueSpan.textContent = `${value}px`;
-            saveSettings(); // Save blur change
+            currentBlurValue = value;
+            saveSettings();
         }
 
         /**
          * Applies a custom background image.
-         * @param {string} url - The URL of the background image.
+         * @param {string} url - The URL of the image.
          */
         function applyCustomBackground(url) {
-            if (url) {
-                document.body.style.backgroundImage = `url('${url}')`;
-                currentBackgroundUrl = url;
-                // Stop Shuffle backgrounds if a custom one is applied
-                if (shuffleInterval) {
-                    clearInterval(shuffleInterval);
-                    shuffleInterval = null;
-                    isShuffleActive = false;
-                    shuffleToggle.checked = false;
-                    shuffleStatus.textContent = 'Off';
-                }
-                showMessageModal("Single background applied!");
-            } else {
-                showMessageModal("Please enter a valid URL.");
-            }
-            saveSettings(); // Save background change
+            document.body.style.backgroundImage = `url('${url}')`;
+            currentBackgroundUrl = url;
+            // Stop shuffle if a custom background is applied
+            stopShuffleBackgrounds();
+            shuffleToggle.checked = false;
+            shuffleStatus.textContent = 'Off';
+            saveSettings();
         }
 
         /**
@@ -929,179 +872,255 @@
         function clearCustomBackground() {
             document.body.style.backgroundImage = 'none';
             currentBackgroundUrl = '';
-            backgroundUrlInput.value = ''; // Clear the input field
-            showMessageModal("Single background cleared!");
-            saveSettings(); // Save background change
-        }
-
-        /**
-         * Starts the Shuffle background rotation.
-         */
-        function startShuffleBackgrounds() {
-            if (allShuffleImages.length === 0) {
-                showMessageModal("No shuffle images available!");
-                shuffleToggle.checked = false;
-                shuffleStatus.textContent = 'Off';
-                return;
+            // If shuffle was active, restart it
+            if (isShuffleActive) {
+                startShuffleBackgrounds();
             }
-            if (shuffleInterval) return; // Already running
-
-            // Initial load of the first batch
-            loadNextBatchOfImages();
-            document.body.style.backgroundImage = `url('${activeShuffleImages[currentShuffleImageIndex]}')`;
-            imagesShownInBatch++;
-
-            shuffleInterval = setInterval(() => {
-                currentShuffleImageIndex = (currentShuffleImageIndex + 1) % activeShuffleImages.length;
-                document.body.style.backgroundImage = `url('${activeShuffleImages[currentShuffleImageIndex]}')`;
-                imagesShownInBatch++;
-
-                // Load next batch if 5 images from current batch have been shown
-                if (imagesShownInBatch >= 5) {
-                    loadNextBatchOfImages();
-                }
-            }, 30000); // Change every 30 seconds
-
-            isShuffleActive = true;
-            // Clear custom background URL if Shuffle is enabled
-            currentBackgroundUrl = '';
-            backgroundUrlInput.value = '';
-            showMessageModal("Shuffle backgrounds started!");
-            saveSettings(); // Save Shuffle state
+            saveSettings();
         }
 
         /**
-         * Stops the Shuffle background rotation.
+         * Starts the shuffle background interval.
+         */
+        async function startShuffleBackgrounds() {
+            if (shuffleInterval) {
+                clearInterval(shuffleInterval);
+            }
+            isShuffleActive = true;
+            shuffleStatus.textContent = 'On';
+            await loadNextBatchOfImages(); // Load initial batch
+            displayNextShuffleImage(); // Display first image immediately
+
+            shuffleInterval = setInterval(async () => {
+                imagesShownInBatch++;
+                if (imagesShownInBatch >= activeShuffleImages.length - 2) { // Load new batch when 2 images are left
+                    await loadNextBatchOfImages();
+                }
+                displayNextShuffleImage();
+            }, 15000); // Change image every 15 seconds
+            saveSettings();
+        }
+
+        /**
+         * Stops the shuffle background interval.
          */
         function stopShuffleBackgrounds() {
             if (shuffleInterval) {
                 clearInterval(shuffleInterval);
                 shuffleInterval = null;
-                document.body.style.backgroundImage = 'none'; // Clear the background
-                isShuffleActive = false;
-                showMessageModal("Shuffle backgrounds stopped!");
             }
-            saveSettings(); // Save Shuffle state
+            isShuffleActive = false;
+            shuffleStatus.textContent = 'Off';
+            saveSettings();
         }
 
         /**
-         * Applies the selected clock position class to the main display content.
-         * @param {string} positionClass - The CSS class for the desired position (e.g., 'pos-center').
+         * Displays the next image from the active shuffle images.
+         */
+        function displayNextShuffleImage() {
+            if (activeShuffleImages.length === 0) {
+                console.warn("No images in active shuffle queue to display.");
+                return;
+            }
+
+            const imageUrl = activeShuffleImages[currentShuffleImageIndex];
+            console.log(`Displaying shuffle image: ${imageUrl}`);
+            document.body.classList.add('fade-out'); // Start fade out
+
+            setTimeout(() => {
+                document.body.style.backgroundImage = `url('${imageUrl}')`;
+                document.body.classList.remove('fade-out');
+                document.body.classList.add('fade-in'); // Start fade in
+                setTimeout(() => {
+                    document.body.classList.remove('fade-in'); // End fade in
+                }, 500); // Match fade-in transition duration
+
+                currentShuffleImageIndex = (currentShuffleImageIndex + 1) % activeShuffleImages.length;
+            }, 500); // Match fade-out transition duration
+        }
+
+        /**
+         * Applies the selected clock position.
+         * @param {string} positionClass - The CSS class for positioning.
          */
         function applyClockPosition(positionClass) {
-            // Remove all existing position classes
             mainDisplayContent.classList.remove('pos-center', 'pos-top-left', 'pos-top-right', 'pos-bottom-left', 'pos-bottom-right');
-            // Add the new position class
             mainDisplayContent.classList.add(positionClass);
             currentClockPosition = positionClass;
-            saveSettings(); // Save clock position change
+            updateActiveClockPositionButton();
+            saveSettings();
+        }
+
+        /**
+         * Updates the active state of clock position radio buttons.
+         */
+        function updateActiveClockPositionButton() {
+            const radios = clockPositionOptions.querySelectorAll('input[type="radio"]');
+            radios.forEach(radio => {
+                if (radio.value === currentClockPosition) {
+                    radio.checked = true;
+                } else {
+                    radio.checked = false;
+                }
+            });
         }
 
         // Event Listeners
-        window.onload = async function() { // Made async to support fetch
+
+        // QoL Controls visibility
+        let controlsTimeout;
+        document.addEventListener('mousemove', () => {
+            qolControls.classList.add('visible');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                qolControls.classList.remove('visible');
+            }, 3000); // Hide after 3 seconds of inactivity
+        });
+
+        // Fullscreen Toggle
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => {
+                    console.error(`Error attempting to enable fullscreen: ${e.message}`);
+                    showMessageModal("Fullscreen not supported or denied.");
+                });
+                fullscreenBtn.querySelector('i').classList.replace('fa-expand', 'fa-compress');
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.querySelector('i').classList.replace('fa-compress', 'fa-expand');
+            }
+        });
+
+        // Update fullscreen button icon on native fullscreen change
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fullscreenBtn.querySelector('i').classList.replace('fa-expand', 'fa-compress');
+            } else {
+                fullscreenBtn.querySelector('i').classList.replace('fa-compress', 'fa-expand');
+            }
+        });
+
+        // Copy Time to Clipboard
+        copyTimeBtn.addEventListener('click', () => {
+            const timeToCopy = timeDisplay.textContent;
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = timeToCopy;
+            tempInput.select();
+            document.execCommand('copy'); // Fallback for navigator.clipboard
+            document.body.removeChild(tempInput);
+            showMessageModal('Time copied!');
+        });
+
+        // Open Settings Modal
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.classList.add('show');
+            // Ensure sliders and toggles reflect current state when modal opens
+            brightnessSliderSettings.value = localStorage.getItem('standbyAppSettings') ? JSON.parse(localStorage.getItem('standbyAppSettings')).brightness : 100;
+            blurSlider.value = localStorage.getItem('standbyAppSettings') ? JSON.parse(localStorage.getItem('standbyAppSettings')).blur : 0;
+            blurValueSpan.textContent = `${blurSlider.value}px`;
+            backgroundUrlInput.value = currentBackgroundUrl;
+            shuffleToggle.checked = isShuffleActive;
+            shuffleStatus.textContent = isShuffleActive ? 'On' : 'Off';
+            updateActiveThemeButton();
+            updateActiveClockPositionButton();
+        });
+
+        // Close Settings Modal
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+
+        // Theme selection
+        for (const themeKey in themeButtons) {
+            if (themeButtons[themeKey]) {
+                themeButtons[themeKey].addEventListener('click', () => applyTheme(themeKey));
+            }
+        }
+
+        // Brightness slider in settings
+        brightnessSliderSettings.addEventListener('input', (e) => {
+            adjustBrightness(e.target.value);
+        });
+
+        // Blur slider in settings
+        blurSlider.addEventListener('input', (e) => {
+            applyBlur(e.target.value);
+        });
+
+        // Custom background image apply
+        applyBackgroundBtn.addEventListener('click', () => {
+            const url = backgroundUrlInput.value.trim();
+            if (url) {
+                applyCustomBackground(url);
+                showMessageModal('Background applied!');
+            } else {
+                showMessageModal('Please enter a valid URL.');
+            }
+        });
+
+        // Custom background image clear
+        clearBackgroundBtn.addEventListener('click', () => {
+            clearCustomBackground();
+            showMessageModal('Background cleared!');
+        });
+
+        // Shuffle toggle
+        shuffleToggle.addEventListener('change', () => {
+            if (shuffleToggle.checked) {
+                startShuffleBackgrounds();
+            } else {
+                stopShuffleBackgrounds();
+            }
+        });
+
+        // Clock position radio buttons
+        clockPositionOptions.addEventListener('change', (e) => {
+            if (e.target.name === 'clock-pos') {
+                applyClockPosition(e.target.value);
+            }
+        });
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+                try {
+                    await navigator.serviceWorker.register('/service-worker.js');
+                    console.log('Service Worker Registered');
+                } catch (error) {
+                    console.error('Service Worker Registration Failed:', error);
+                }
+            }
+
+            // Check if running as PWA and add class to body
+            if (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone) {
+                document.body.classList.add('pwa-display');
+            }
+
+
             // Fetch photos.json
             try {
-                const response = await fetch('photos.json');
+                const response = await fetch('/photos.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                allShuffleImages = await response.json();
-                console.log("Photos loaded from photos.json:", allShuffleImages);
+                const data = await response.json();
+                allShuffleImages = data;
+                console.log(`Loaded ${allShuffleImages.length} images from photos.json`);
             } catch (error) {
-                console.error("Could not load photos.json:", error);
-                showMessageModal("Failed to load background images from photos.json.");
-                // Fallback or handle appropriately if JSON fails to load
-                // In this case, allShuffleImages will remain empty, and shuffle won't start.
+                console.error('Error fetching photos.json:', error);
+                showMessageModal('Failed to load shuffle images.');
             }
-            
-            loadSettings(); // Load settings on startup, which will now trigger shuffle by default
 
-            // Initial update
             updateTime();
             updateMessageWidget();
+            loadSettings(); // Load and apply settings, which will start shuffle if enabled
 
             // Update time every second
             setInterval(updateTime, 1000);
-            // Update message every 10 seconds
-            setInterval(updateMessageWidget, 10000);
-
-            // Show QoL controls on mouse movement
-            let controlsTimeout;
-            document.addEventListener('mousemove', () => {
-                qolControls.classList.add('visible');
-                clearTimeout(controlsTimeout);
-                controlsTimeout = setTimeout(() => {
-                    qolControls.classList.remove('visible');
-                }, 3000); // Hide after 3 seconds of inactivity
-            });
-
-            // Keep controls visible if mouse is over them
-            qolControls.addEventListener('mouseenter', () => {
-                clearTimeout(controlsTimeout);
-            });
-            qolControls.addEventListener('mouseleave', () => {
-                controlsTimeout = setTimeout(() => {
-                    qolControls.classList.remove('visible');
-                }, 3000);
-            });
-
-            // Brightness slider in settings event
-            brightnessSliderSettings.addEventListener('input', (event) => {
-                adjustBrightness(event.target.value);
-            });
-
-            // Blur slider event
-            blurSlider.addEventListener('input', (event) => {
-                applyBlur(event.target.value);
-            });
-
-            // Custom background image events
-            applyBackgroundBtn.addEventListener('click', () => applyCustomBackground(backgroundUrlInput.value));
-            clearBackgroundBtn.addEventListener('click', clearCustomBackground);
-
-            // Shuffle toggle event
-            shuffleToggle.addEventListener('change', (event) => {
-                if (event.target.checked) {
-                    startShuffleBackgrounds();
-                } else {
-                    stopShuffleBackgrounds();
-                }
-                shuffleStatus.textContent = event.target.checked ? 'On' : 'Off';
-            });
-
-            // Fullscreen button event
-            fullscreenBtn.addEventListener('click', toggleFullscreen);
-
-            // Copy time button event
-            copyTimeBtn.addEventListener('click', copyTimeToClipboard);
-
-            // Settings button events
-            settingsBtn.addEventListener('click', openSettings);
-            closeSettingsBtn.addEventListener('click', closeSettings);
-
-            // Theme button events (delegated from settings modal)
-            for (const themeKey in themeButtons) {
-                themeButtons[themeKey].addEventListener('click', () => applyTheme(themeKey));
-            }
-
-            // Clock position radio button events
-            clockPositionOptions.addEventListener('change', (event) => {
-                if (event.target.name === 'clock-pos') {
-                    applyClockPosition(event.target.value);
-                }
-            });
-        };
-
-        // Handle fullscreen change to update button icon and fade effect
-        document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement) {
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            } else {
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-            // Ensure fade-in class is applied after fullscreen change completes
-            document.body.classList.remove('fade-out');
-            document.body.classList.add('fade-in');
+            // Update message every 30 seconds
+            setInterval(updateMessageWidget, 30000);
         });
     </script>
 </body>
