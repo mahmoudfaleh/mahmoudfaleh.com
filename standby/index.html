@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="app-title">StandBy++</title>
+    <title id="app-title">Custom StandBy</title>
     <!-- PWA Manifest Link -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/standby/manifest.json">
+    <!-- Favicon Link (added for placeholder, replace with your own) -->
+    <link rel="icon" href="https://placehold.co/32x32/000000/FFFFFF?text=SB" type="image/png">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
@@ -236,21 +238,6 @@
             transition: color 0.3s ease;
         }
 
-        /* Opaque box behind clock text */
-        .clock-background-box {
-            background-color: rgba(0, 0, 0, 0.3); /* Slightly opaque black */
-            padding: 2rem 3rem;
-            border-radius: 1.5rem; /* Rounded corners for the box */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-            max-width: 90%; /* Ensure it doesn't get too wide on large screens */
-            box-sizing: border-box;
-        }
-
-
         /* Brightness overlay */
         #brightness-overlay {
             position: fixed;
@@ -418,11 +405,8 @@
 
     <!-- Main Display Area -->
     <div id="main-display-content" class="main-display-content pos-center">
-        <!-- Opaque box behind clock text -->
-        <div class="clock-background-box">
-            <div id="time-display" class="font-light"></div>
-            <div id="date-display" class="font-light"></div>
-        </div>
+        <div id="time-display" class="font-light"></div>
+        <div id="date-display" class="font-light"></div>
         <div id="message-widget" class="font-light"></div>
     </div>
 
@@ -1086,7 +1070,8 @@
             // Register service worker
             if ('serviceWorker' in navigator) {
                 try {
-                    await navigator.serviceWorker.register('/service-worker.js');
+                    // Register service worker with the correct scope for the sub-directory
+                    await navigator.serviceWorker.register('/standby/service-worker.js', { scope: '/standby/' });
                     console.log('Service Worker Registered');
                 } catch (error) {
                     console.error('Service Worker Registration Failed:', error);
@@ -1101,7 +1086,8 @@
 
             // Fetch photos.json
             try {
-                const response = await fetch('/photos.json');
+                // Fetch photos.json relative to the current HTML file
+                const response = await fetch('photos.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
