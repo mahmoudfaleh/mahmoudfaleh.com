@@ -1,4 +1,4 @@
-const CACHE_NAME = 'standby-cache-v1';
+const CACHE_NAME = 'standby-cache-v2';
 const urlsToCache = [
     'https://mahmoudfaleh.github.io/standby/', // The base URL of your PWA
     'https://mahmoudfaleh.github.io/standby/index.html',
