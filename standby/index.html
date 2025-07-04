@@ -13,27 +13,43 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Ensure html and body take full viewport height */
+        /* Force html and body to fill the entire viewport */
         html, body {
-            height: 100%; /* IMPORTANT: This ensures the body fills the entire viewport */
+            width: 100vw; /* Ensure it takes full viewport width */
+            height: 100vh; /* Ensure it takes full viewport height */
             margin: 0; /* Remove default body margin */
             padding: 0; /* Remove default body padding */
+            overflow: hidden; /* Prevent any scrolling */
+            touch-action: manipulation; /* Improve touch responsiveness on mobile */
+            user-select: none; /* Prevent text selection */
         }
 
         /* Custom CSS for themes and general styling */
         body {
             font-family: 'Inter', sans-serif; /* Default font */
-            overflow: hidden; /* Prevent scrolling */
-            transition: background-color 0.5s ease, opacity 0.5s ease, background-image 1s ease, backdrop-filter 0.5s ease;
-            background-size: cover; /* Ensures the image covers the entire element, stretching if necessary */
-            background-position: center; /* Centers the image */
-            background-repeat: no-repeat; /* Prevents the image from tiling */
-            position: relative;
-            min-height: 100vh;
+            position: relative; /* Needed for pseudo-element positioning */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            /* Background image styles moved to ::before pseudo-element */
+            /* Transitions for background-color and opacity remain on body */
+            transition: background-color 0.5s ease, opacity 0.5s ease, backdrop-filter 0.5s ease;
+        }
+
+        /* Pseudo-element for the full-screen background image */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover; /* Ensures the image covers the entire element */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents the image from tiling */
+            transition: background-image 1s ease; /* Smooth transition for image changes */
+            z-index: -1; /* Place it behind all content */
         }
 
         /* Fullscreen fade effect */
@@ -179,11 +195,12 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            padding: 2rem; /* Add padding to prevent content touching edges */
+            padding: 2vmin; /* Use vmin for overall padding to ensure content fits */
             box-sizing: border-box;
         }
 
         /* Clock Positioning Classes */
+        /* Adjusted viewport units and max sizes for better mobile scaling */
         .pos-center {
             top: 50%;
             left: 50%;
@@ -192,8 +209,8 @@
             justify-content: center;
         }
         .pos-top-left {
-            top: 5%;
-            left: 5%;
+            top: 5vmin; /* Use vmin for consistent spacing on different aspect ratios */
+            left: 5vmin;
             transform: none;
             align-items: flex-start;
             justify-content: flex-start;
@@ -201,8 +218,8 @@
             height: auto;
         }
         .pos-top-right {
-            top: 5%;
-            right: 5%;
+            top: 5vmin;
+            right: 5vmin;
             transform: none;
             align-items: flex-end;
             justify: flex-start;
@@ -210,8 +227,8 @@
             height: auto;
         }
         .pos-bottom-left {
-            bottom: 5%;
-            left: 5%;
+            bottom: 5vmin;
+            left: 5vmin;
             transform: none;
             align-items: flex-start;
             justify: flex-end;
@@ -219,8 +236,8 @@
             height: auto;
         }
         .pos-bottom-right {
-            bottom: 5%;
-            right: 5%;
+            bottom: 5vmin;
+            right: 5vmin;
             transform: none;
             align-items: flex-end;
             justify: flex-end;
@@ -230,8 +247,8 @@
 
         /* Responsive font sizes for time and date */
         #time-display {
-            font-size: 18vw; /* Scales with viewport width */
-            max-font-size: 10rem; /* Max size for larger screens */
+            font-size: 12vw; /* Further adjusted down for mobile */
+            max-font-size: 8rem; /* Adjusted max size */
             letter-spacing: -0.05em;
             line-height: 1;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
@@ -239,10 +256,10 @@
         }
 
         #date-display {
-            font-size: 5vw; /* Scales with viewport width */
-            max-font-size: 2.5rem; /* Max size for larger screens */
+            font-size: 3.5vw; /* Further adjusted down for mobile */
+            max-font-size: 2rem; /* Adjusted max size */
             font-weight: 300;
-            margin-top: 1rem;
+            margin-top: 0.5rem; /* Reduced margin */
             opacity: 0.8;
             transition: color 0.3s ease;
         }
@@ -250,8 +267,8 @@
         /* Opaque box behind clock text */
         .clock-background-box {
             background-color: rgba(0, 0, 0, 0.3); /* Slightly opaque black */
-            padding: 4vw 6vw; /* Responsive padding */
-            max-padding: 2rem 3rem; /* Max padding for larger screens */
+            padding: 2.5vw 4vw; /* Adjusted responsive padding */
+            max-padding: 1.5rem 2.5rem; /* Adjusted max padding for larger screens */
             border-radius: 1.5rem; /* Rounded corners for the box */
             display: flex;
             flex-direction: column;
@@ -260,6 +277,17 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow */
             max-width: 90%; /* Ensure it doesn't get too wide on large screens */
             box-sizing: border-box;
+        }
+
+        /* Message widget */
+        #message-widget {
+            font-size: 3.5vw; /* Make message responsive */
+            max-font-size: 1.5rem; /* Max size for message */
+            margin-top: 1.5rem; /* Adjusted margin to prevent overlap */
+            opacity: 0.7;
+            text-align: center;
+            height: 2em; /* Reserve space to prevent CLS */
+            transition: opacity 0.5s ease;
         }
 
         /* Brightness overlay */
@@ -321,16 +349,6 @@
         }
         .qol-slider::-moz-range-thumb {
             @apply w-5 h-5 bg-blue-500 rounded-full cursor-pointer;
-        }
-
-        /* Message widget */
-        #message-widget {
-            font-size: 1.5rem;
-            margin-top: 2rem;
-            opacity: 0.7;
-            text-align: center;
-            height: 2em; /* Reserve space to prevent CLS */
-            transition: opacity 0.5s ease;
         }
 
         /* Modal for messages (e.g., "Copied to clipboard") */
@@ -613,6 +631,25 @@
 
         let shuffleInterval;
 
+        // Function to get the body::before style rule
+        function getBodyBeforeStyle() {
+            const styleSheets = document.styleSheets;
+            for (let i = 0; i < styleSheets.length; i++) {
+                try {
+                    const rules = styleSheets[i].cssRules || styleSheets[i].rules;
+                    for (let j = 0; j < rules.length; j++) {
+                        if (rules[j].selectorText === 'body::before') {
+                            return rules[j].style;
+                        }
+                    }
+                } catch (e) {
+                    // Catch security errors for cross-origin stylesheets
+                    console.warn("Could not access stylesheet rules:", e);
+                }
+            }
+            return null; // Return null if not found
+        }
+
         /**
          * Preloads and validates an image. Returns a Promise that resolves with the URL
          * if the image is valid (HTTP 200 OK) and rejects otherwise.
@@ -873,30 +910,40 @@
         }
 
         /**
-         * Applies a custom background image.
+         * Applies a custom background image to the body::before pseudo-element.
          * @param {string} url - The URL of the image.
          */
         function applyCustomBackground(url) {
-            document.body.style.backgroundImage = `url('${url}')`;
-            currentBackgroundUrl = url;
-            // Stop shuffle if a custom background is applied
-            stopShuffleBackgrounds();
-            shuffleToggle.checked = false;
-            shuffleStatus.textContent = 'Off';
-            saveSettings();
+            const bodyBeforeStyle = getBodyBeforeStyle();
+            if (bodyBeforeStyle) {
+                bodyBeforeStyle.backgroundImage = `url('${url}')`;
+                currentBackgroundUrl = url;
+                // Stop shuffle if a custom background is applied
+                stopShuffleBackgrounds();
+                shuffleToggle.checked = false;
+                shuffleStatus.textContent = 'Off';
+                saveSettings();
+            } else {
+                console.error("Could not find body::before style rule to apply background.");
+            }
         }
 
         /**
-         * Clears the custom background image.
+         * Clears the custom background image from the body::before pseudo-element.
          */
         function clearCustomBackground() {
-            document.body.style.backgroundImage = 'none';
-            currentBackgroundUrl = '';
-            // If shuffle was active, restart it
-            if (isShuffleActive) {
-                startShuffleBackgrounds();
+            const bodyBeforeStyle = getBodyBeforeStyle();
+            if (bodyBeforeStyle) {
+                bodyBeforeStyle.backgroundImage = 'none';
+                currentBackgroundUrl = '';
+                // If shuffle was active, restart it
+                if (isShuffleActive) {
+                    startShuffleBackgrounds();
+                }
+                saveSettings();
+            } else {
+                console.error("Could not find body::before style rule to clear background.");
             }
-            saveSettings();
         }
 
         /**
@@ -947,16 +994,21 @@
             console.log(`Displaying shuffle image: ${imageUrl}`);
             document.body.classList.add('fade-out'); // Start fade out
 
-            setTimeout(() => {
-                document.body.style.backgroundImage = `url('${imageUrl}')`;
-                document.body.classList.remove('fade-out');
-                document.body.classList.add('fade-in'); // Start fade in
+            const bodyBeforeStyle = getBodyBeforeStyle();
+            if (bodyBeforeStyle) {
                 setTimeout(() => {
-                    document.body.classList.remove('fade-in'); // End fade in
-                }, 500); // Match fade-in transition duration
+                    bodyBeforeStyle.backgroundImage = `url('${imageUrl}')`;
+                    document.body.classList.remove('fade-out');
+                    document.body.classList.add('fade-in'); // Start fade in
+                    setTimeout(() => {
+                        document.body.classList.remove('fade-in'); // End fade in
+                    }, 500); // Match fade-in transition duration
 
-                currentShuffleImageIndex = (currentShuffleImageIndex + 1) % activeShuffleImages.length;
-            }, 500); // Match fade-out transition duration
+                    currentShuffleImageIndex = (currentShuffleImageIndex + 1) % activeShuffleImages.length;
+                }, 500); // Match fade-out transition duration
+            } else {
+                console.error("Could not find body::before style rule to display shuffle image.");
+            }
         }
 
         /**
