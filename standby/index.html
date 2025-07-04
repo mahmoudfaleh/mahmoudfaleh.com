@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="app-title">Custom StandBy</title>
+    <title id="app-title">StandBy++</title>
     <!-- PWA Manifest Link (Absolute URL) -->
     <link rel="manifest" href="https://mahmoudfaleh.github.io/standby/manifest.json">
     <!-- Favicon Link (Absolute URL) -->
@@ -29,7 +29,7 @@
             background-position: center; /* Centers the image */
             background-repeat: no-repeat; /* Prevents the image from tiling */
             position: relative;
-            min-height: 100vh; /* This is good, but height:100% on html/body is more fundamental for background-size:cover */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -228,9 +228,10 @@
             height: auto;
         }
 
-        /* Specific styles for time and date */
+        /* Responsive font sizes for time and date */
         #time-display {
-            font-size: 10rem;
+            font-size: 18vw; /* Scales with viewport width */
+            max-font-size: 10rem; /* Max size for larger screens */
             letter-spacing: -0.05em;
             line-height: 1;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
@@ -238,7 +239,8 @@
         }
 
         #date-display {
-            font-size: 2.5rem;
+            font-size: 5vw; /* Scales with viewport width */
+            max-font-size: 2.5rem; /* Max size for larger screens */
             font-weight: 300;
             margin-top: 1rem;
             opacity: 0.8;
@@ -248,7 +250,8 @@
         /* Opaque box behind clock text */
         .clock-background-box {
             background-color: rgba(0, 0, 0, 0.3); /* Slightly opaque black */
-            padding: 2rem 3rem;
+            padding: 4vw 6vw; /* Responsive padding */
+            max-padding: 2rem 3rem; /* Max padding for larger screens */
             border-radius: 1.5rem; /* Rounded corners for the box */
             display: flex;
             flex-direction: column;
@@ -310,7 +313,7 @@
         }
 
         .qol-slider {
-            @apply w-32 h-2 bg-gray-600 rounded-full appearance-none cursor-pointer;
+            @apply w-full max-w-xs h-2 bg-gray-600 rounded-full appearance-none cursor-pointer; /* Made width responsive */
         }
         .qol-slider::-webkit-slider-thumb {
             @apply w-5 h-5 bg-blue-500 rounded-full cursor-pointer;
