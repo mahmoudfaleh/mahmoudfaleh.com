@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="app-title">Custom StandBy</title>
     <!-- PWA Manifest Link -->
-    <link rel="manifest" href="/standby/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <!-- Favicon Link (added for placeholder, replace with your own) -->
     <link rel="icon" href="https://placehold.co/32x32/000000/FFFFFF?text=SB" type="image/png">
     <!-- Tailwind CSS CDN -->
@@ -1071,7 +1071,7 @@
             if ('serviceWorker' in navigator) {
                 try {
                     // Register service worker with the correct scope for the sub-directory
-                    await navigator.serviceWorker.register('/standby/service-worker.js', { scope: '/standby/' });
+                    await navigator.serviceWorker.register('service-worker.js', { scope: '/standby/' });
                     console.log('Service Worker Registered');
                 } catch (error) {
                     console.error('Service Worker Registration Failed:', error);
