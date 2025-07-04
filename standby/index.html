@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="app-title">Custom StandBy</title>
-    <!-- PWA Manifest Link -->
-    <link rel="manifest" href="manifest.json">
-    <!-- Favicon Link (added for placeholder, replace with your own) -->
-    <link rel="icon" href="https://placehold.co/32x32/000000/FFFFFF?text=SB" type="image/png">
-    <!-- Tailwind CSS CDN -->
+    <link rel="manifest" href="https://mahmoudfaleh.github.io/standby/manifest.json">
+    <link rel="icon" href="https://mahmoudfaleh.github.io/standby/icons/icon-192x192.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Custom CSS for themes and general styling */
@@ -400,42 +396,33 @@
 </head>
 <body class="theme-dark select-none">
 
-    <!-- Brightness Overlay -->
     <div id="brightness-overlay"></div>
 
-    <!-- Main Display Area -->
     <div id="main-display-content" class="main-display-content pos-center">
         <div id="time-display" class="font-light"></div>
         <div id="date-display" class="font-light"></div>
         <div id="message-widget" class="font-light"></div>
     </div>
 
-    <!-- Quality of Life Controls -->
     <div id="qol-controls" class="qol-controls">
-        <!-- Fullscreen Button -->
         <button id="fullscreen-btn" class="qol-button" aria-label="Toggle Fullscreen">
             <i class="fas fa-expand"></i>
         </button>
-        <!-- Copy Time Button -->
         <button id="copy-time-btn" class="qol-button" aria-label="Copy Time">
             <i class="fas fa-copy"></i>
         </button>
-        <!-- Settings Button -->
         <button id="settings-btn" class="qol-button" aria-label="Open Settings">
             <i class="fas fa-cog"></i>
         </button>
     </div>
 
-    <!-- Message Modal -->
     <div id="message-modal" class="message-modal"></div>
 
-    <!-- Settings Modal -->
     <div id="settings-modal" class="settings-modal">
         <div class="settings-modal-content">
             <span class="close-btn" id="close-settings-btn">&times;</span>
             <h2>Settings</h2>
 
-            <!-- Themes -->
             <label for="theme-selector">Choose Theme:</label>
             <div class="theme-grid">
                 <button id="theme-dark" class="theme-button" aria-label="Dark Theme">
@@ -461,14 +448,12 @@
                 </button>
             </div>
 
-            <!-- Brightness Control -->
             <label for="brightness-slider-settings">Brightness:</label>
             <div class="flex items-center gap-2">
                 <i class="fas fa-sun text-white"></i>
                 <input type="range" id="brightness-slider-settings" min="0" max="100" value="100" class="qol-slider">
             </div>
 
-            <!-- Background Blur -->
             <label for="blur-slider">Background Blur:</label>
             <div class="flex items-center gap-2">
                 <i class="fas fa-smog text-white"></i>
@@ -476,13 +461,11 @@
                 <span id="blur-value" class="text-white">0px</span>
             </div>
 
-            <!-- Custom Background Image -->
             <label for="background-url">Set Single Background Image URL:</label>
             <input type="text" id="background-url" placeholder="Enter image URL">
             <button id="apply-background-btn" class="qol-button w-full mt-4">Apply Single Background</button>
             <button id="clear-background-btn" class="qol-button w-full mt-2 bg-red-600 hover:bg-red-700">Clear Single Background</button>
 
-            <!-- Shuffle Backgrounds Toggle -->
             <label class="block text-lg font-medium mb-2 mt-4">Shuffle Backgrounds:</label>
             <div class="flex items-center justify-center">
                 <label for="shuffle-toggle" class="flex items-center cursor-pointer">
@@ -497,7 +480,6 @@
                 </label>
             </div>
 
-            <!-- Clock Position -->
             <label for="clock-position">Clock Position:</label>
             <div id="clock-position-options" class="flex flex-wrap gap-4 mt-2 justify-center">
                 <label class="flex items-center cursor-pointer text-sm">
@@ -1071,7 +1053,7 @@
             if ('serviceWorker' in navigator) {
                 try {
                     // Register service worker with the correct scope for the sub-directory
-                    await navigator.serviceWorker.register('service-worker.js', { scope: '/standby/' });
+                    await navigator.serviceWorker.register('https://mahmoudfaleh.github.io/standby/service-worker.js', { scope: 'https://mahmoudfaleh.github.io/standby/' });
                     console.log('Service Worker Registered');
                 } catch (error) {
                     console.error('Service Worker Registration Failed:', error);
@@ -1083,11 +1065,10 @@
                 document.body.classList.add('pwa-display');
             }
 
-
             // Fetch photos.json
             try {
-                // Fetch photos.json relative to the current HTML file
-                const response = await fetch('photos.json');
+                // Fetch photos.json using its absolute URL
+                const response = await fetch('https://mahmoudfaleh.github.io/standby/photos.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
