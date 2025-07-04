@@ -15,17 +15,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Force html and body to fill the entire viewport, using min-width/height for robustness */
-        html, body {
+        html {
+            height: 100%; /* Ensure html takes full height */
+            width: 100%; /* Ensure html takes full width */
+            overflow: hidden; /* Prevent scrolling on html as well */
+        }
+        body {
             width: 100vw; /* Ensure it takes full viewport width */
             height: 100vh; /* Ensure it takes full viewport height */
-            min-width: 100%; /* Add min-width for extra robustness */
-            min-height: 100%; /* Add min-height for extra robustness */
+            min-width: 100vw; /* Explicitly ensure minimum viewport width */
+            min-height: 100vh; /* Explicitly ensure minimum viewport height */
             margin: 0; /* Remove default body margin */
             padding: 0; /* Remove default body padding */
-            overflow: hidden; /* Prevent any scrolling */
+            overflow: hidden; /* Prevent any scrolling on body */
             touch-action: manipulation; /* Improve touch responsiveness on mobile */
             user-select: none; /* Prevent text selection */
             /* Use safe-area-insets to push content away from notches/home indicators */
+            /* These paddings will apply to the *content* inside body, not the background */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
@@ -49,9 +55,9 @@
             content: '';
             position: fixed; /* Changed to fixed for more reliable full-screen coverage */
             top: 0;
-            left: 0;
-            width: 100vw; /* Use vw/vh here explicitly for fixed positioning */
-            height: 100vh;
+            right: 0;
+            bottom: 0;
+            left: 0; /* Explicitly cover all edges of the viewport */
             background-size: cover; /* Ensures the image covers the entire element */
             background-position: center; /* Centers the image */
             background-repeat: no-repeat; /* Prevents the image from tiling */
