@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- IMPORTANT: Added viewport-fit=cover for full screen on modern mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title id="app-title">StandBy++</title>
     <!-- PWA Manifest Link (Absolute URL) -->
     <link rel="manifest" href="https://mahmoudfaleh.github.io/standby/manifest.json">
@@ -24,6 +25,11 @@
             overflow: hidden; /* Prevent any scrolling */
             touch-action: manipulation; /* Improve touch responsiveness on mobile */
             user-select: none; /* Prevent text selection */
+            /* Use safe-area-insets to push content away from notches/home indicators */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         /* Custom CSS for themes and general styling */
