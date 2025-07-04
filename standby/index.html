@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="app-title">Custom StandBy</title>
+    <!-- PWA Manifest Link (Absolute URL) -->
     <link rel="manifest" href="https://mahmoudfaleh.github.io/standby/manifest.json">
+    <!-- Favicon Link (Absolute URL) -->
     <link rel="icon" href="https://mahmoudfaleh.github.io/standby/icons/icon-192x192.png" type="image/png">
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Custom CSS for themes and general styling */
@@ -234,6 +238,20 @@
             transition: color 0.3s ease;
         }
 
+        /* Opaque box behind clock text */
+        .clock-background-box {
+            background-color: rgba(0, 0, 0, 0.3); /* Slightly opaque black */
+            padding: 2rem 3rem;
+            border-radius: 1.5rem; /* Rounded corners for the box */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            max-width: 90%; /* Ensure it doesn't get too wide on large screens */
+            box-sizing: border-box;
+        }
+
         /* Brightness overlay */
         #brightness-overlay {
             position: fixed;
@@ -396,33 +414,45 @@
 </head>
 <body class="theme-dark select-none">
 
+    <!-- Brightness Overlay -->
     <div id="brightness-overlay"></div>
 
+    <!-- Main Display Area -->
     <div id="main-display-content" class="main-display-content pos-center">
-        <div id="time-display" class="font-light"></div>
-        <div id="date-display" class="font-light"></div>
+        <!-- Opaque box behind clock text -->
+        <div class="clock-background-box">
+            <div id="time-display" class="font-light"></div>
+            <div id="date-display" class="font-light"></div>
+        </div>
         <div id="message-widget" class="font-light"></div>
     </div>
 
+    <!-- Quality of Life Controls -->
     <div id="qol-controls" class="qol-controls">
+        <!-- Fullscreen Button -->
         <button id="fullscreen-btn" class="qol-button" aria-label="Toggle Fullscreen">
             <i class="fas fa-expand"></i>
         </button>
+        <!-- Copy Time Button -->
         <button id="copy-time-btn" class="qol-button" aria-label="Copy Time">
             <i class="fas fa-copy"></i>
         </button>
+        <!-- Settings Button -->
         <button id="settings-btn" class="qol-button" aria-label="Open Settings">
             <i class="fas fa-cog"></i>
         </button>
     </div>
 
+    <!-- Message Modal -->
     <div id="message-modal" class="message-modal"></div>
 
+    <!-- Settings Modal -->
     <div id="settings-modal" class="settings-modal">
         <div class="settings-modal-content">
             <span class="close-btn" id="close-settings-btn">&times;</span>
             <h2>Settings</h2>
 
+            <!-- Themes -->
             <label for="theme-selector">Choose Theme:</label>
             <div class="theme-grid">
                 <button id="theme-dark" class="theme-button" aria-label="Dark Theme">
@@ -448,12 +478,14 @@
                 </button>
             </div>
 
+            <!-- Brightness Control -->
             <label for="brightness-slider-settings">Brightness:</label>
             <div class="flex items-center gap-2">
                 <i class="fas fa-sun text-white"></i>
                 <input type="range" id="brightness-slider-settings" min="0" max="100" value="100" class="qol-slider">
             </div>
 
+            <!-- Background Blur -->
             <label for="blur-slider">Background Blur:</label>
             <div class="flex items-center gap-2">
                 <i class="fas fa-smog text-white"></i>
@@ -461,11 +493,13 @@
                 <span id="blur-value" class="text-white">0px</span>
             </div>
 
+            <!-- Custom Background Image -->
             <label for="background-url">Set Single Background Image URL:</label>
             <input type="text" id="background-url" placeholder="Enter image URL">
             <button id="apply-background-btn" class="qol-button w-full mt-4">Apply Single Background</button>
             <button id="clear-background-btn" class="qol-button w-full mt-2 bg-red-600 hover:bg-red-700">Clear Single Background</button>
 
+            <!-- Shuffle Backgrounds Toggle -->
             <label class="block text-lg font-medium mb-2 mt-4">Shuffle Backgrounds:</label>
             <div class="flex items-center justify-center">
                 <label for="shuffle-toggle" class="flex items-center cursor-pointer">
@@ -480,6 +514,7 @@
                 </label>
             </div>
 
+            <!-- Clock Position -->
             <label for="clock-position">Clock Position:</label>
             <div id="clock-position-options" class="flex flex-wrap gap-4 mt-2 justify-center">
                 <label class="flex items-center cursor-pointer text-sm">
@@ -610,7 +645,7 @@
             if (activeShuffleImages.length === 0 || imagesShownInBatch >= 5) {
                 const batchSize = 10;
                 const potentialNewImages = [];
-                const validNewImages = [];
+                const failedImagesInBatch = []; // To store failed image URLs
 
                 // Collect URLs for the next batch
                 for (let i = 0; i < batchSize; i++) {
@@ -622,22 +657,31 @@
 
                 // Validate and preload images concurrently
                 const preloadPromises = potentialNewImages.map(url => validateAndPreloadImage(url)
-                    .then(validUrl => {
-                        validNewImages.push(validUrl); // Add to valid list only if successful
-                        return validUrl;
-                    })
+                    .then(validUrl => validUrl)
                     .catch(error => {
-                        // Error already logged in validateAndPreloadImage
+                        failedImagesInBatch.push({ url, error: error.message || error }); // Store URL and error
                         return null; // Return null for failed images
                     })
                 );
 
                 // Wait for all preloads/validations to complete
-                await Promise.allSettled(preloadPromises);
+                const results = await Promise.allSettled(preloadPromises);
 
                 // Filter out any nulls (failed images) and shuffle the valid images
-                activeShuffleImages = validNewImages.filter(url => url !== null);
-                // Optional: Shuffle the new batch to ensure variety if not already random from pool
+                activeShuffleImages = results
+                    .filter(result => result.status === 'fulfilled' && result.value !== null)
+                    .map(result => result.value);
+
+                // Log failed images at the end for review
+                if (failedImagesInBatch.length > 0) {
+                    console.warn("--- Failed Images in Current Shuffle Batch ---");
+                    failedImagesInBatch.forEach(item => {
+                        console.warn(`Failed to load: ${item.url} - Error: ${item.error}`);
+                    });
+                    console.warn("------------------------------------------");
+                }
+
+                // Shuffle the valid images
                 for (let i = activeShuffleImages.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [activeShuffleImages[i], activeShuffleImages[j]] = [activeShuffleImages[j], activeShuffleImages[i]];
