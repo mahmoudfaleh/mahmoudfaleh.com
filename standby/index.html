@@ -13,16 +13,23 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Ensure html and body take full viewport height */
+        html, body {
+            height: 100%; /* IMPORTANT: This ensures the body fills the entire viewport */
+            margin: 0; /* Remove default body margin */
+            padding: 0; /* Remove default body padding */
+        }
+
         /* Custom CSS for themes and general styling */
         body {
             font-family: 'Inter', sans-serif; /* Default font */
             overflow: hidden; /* Prevent scrolling */
             transition: background-color 0.5s ease, opacity 0.5s ease, background-image 1s ease, backdrop-filter 0.5s ease;
-            background-size: cover; /* Ensure image stretches to cover the full background */
-            background-position: center; /* Center the background image */
-            background-repeat: no-repeat; /* Prevent image repetition */
+            background-size: cover; /* Ensures the image covers the entire element, stretching if necessary */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents the image from tiling */
             position: relative;
-            min-height: 100vh;
+            min-height: 100vh; /* This is good, but height:100% on html/body is more fundamental for background-size:cover */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -198,7 +205,7 @@
             right: 5%;
             transform: none;
             align-items: flex-end;
-            justify-content: flex-start;
+            justify: flex-start;
             width: auto;
             height: auto;
         }
@@ -207,7 +214,7 @@
             left: 5%;
             transform: none;
             align-items: flex-start;
-            justify-content: flex-end;
+            justify: flex-end;
             width: auto;
             height: auto;
         }
@@ -216,7 +223,7 @@
             right: 5%;
             transform: none;
             align-items: flex-end;
-            justify-content: flex-end;
+            justify: flex-end;
             width: auto;
             height: auto;
         }
