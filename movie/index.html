@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TMDB TV Search</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Movie & TV Search</h1>
+    </header>
+
+    <main id="main-area">
+      <div class="center-search">
+        <input id="query" placeholder="Search for a movie or show" aria-label="Search" />
+        <button id="searchBtn">Search</button>
+      </div>
+
+      <div id="results" class="results-list" role="list"></div>
+    </main>
+
+    <div id="iframe-area" class="hidden">
+      <button id="backBtn" class="back">← Back</button>
+      <div class="iframe-wrap">
+        <iframe id="movieFrame" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
