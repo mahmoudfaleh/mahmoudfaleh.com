@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a84ff">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>dsasd</title>
+
+      <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1220;
+        --card: #111827;
+        --muted: #9aa4b2;
+        --text: #e5e7eb;
+        --line: #1f2937;
+        --accent: #22d3ee;
+        --accent-2: #8b5cf6;
+        --error: #ef4444;
+        --success: #22c55e;
+        --warn: #f59e0b;
+        --btn: #1f2937;
+        --btn-hover: #273449;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #0b1220, #0b1220 70%, #0a0f1a);
+        color: var(--text);
+        font: 16px/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        padding: calc(10px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));
+      }
+      .app {
+        max-width: 820px;
+        margin: 0 auto;
+      }
+      header {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 8px 0 12px;
+      }
+      .brand {
+        display: inline-flex; align-items: center; gap: 10px;
+      }
+      .logo {
+        width: 28px; height: 28px; border-radius: 8px;
+        background: radial-gradient(80% 80% at 20% 20%, #0ea5e9, #1d4ed8 60%, #0b1220 100%);
+        box-shadow: 0 0 0 2px #0ea5e933 inset, 0 0 24px #0ea5e955;
+      }
+      h1 { font-size: 18px; margin: 0; letter-spacing: .4px; }
+      .sub { color: var(--muted); font-size: 12px; }
+
+      .tabs {
+        display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 10px;
+      }
+      .tab {
+        padding: 8px 12px; border-radius: 8px 8px 0 0; background: transparent; color: var(--muted);
+        border: 1px solid transparent; cursor: pointer; font-weight: 600;
+      }
+      .tab.active {
+        color: var(--text); background: #0f172a; border-color: var(--line) var(--line) #0f172a var(--line);
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        box-shadow: 0 10px 30px #0004;
+      }
+      .grid { display: grid; gap: 10px; }
+      .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .row > * { min-width: 0; }
+      .grow { flex: 1; }
+
+      input[type="text"] {
+        width: 100%; padding: 12px 12px; border-radius: 12px;
+        border: 1px solid var(--line); background: #0b1220; color: var(--text); outline: none;
+      }
+      input[readonly] { color: var(--muted); }
+      input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+      .btn {
+        background: var(--btn); color: var(--text); border: 1px solid var(--line);
+        border-radius: 12px; padding: 12px 14px; cursor: pointer; font-weight: 700;
+      }
+      .btn:hover { background: var(--btn-hover); }
+      .btn.primary { background: linear-gradient(180deg, #0ea5e9, #2563eb); border-color: #0ea5e955; box-shadow: 0 6px 24px #2563eb55; }
+      .btn.accent  { background: linear-gradient(180deg, #22d3ee, #0ea5e9); border-color: #22d3ee66; }
+      .btn.warn    { background: linear-gradient(180deg, #f59e0b, #ea580c); border-color: #f59e0b66; }
+      .btn.success { background: linear-gradient(180deg, #22c55e, #16a34a); border-color: #22c55e66; }
+      .btn:disabled { opacity: .6; cursor: not-allowed; }
+
+      .pill { padding: 4px 10px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); color: var(--muted); }
+      .pill.red { background: #7f1d1d; color: #fecaca; border-color: #b91c1c; }
+      .pill.green { background: #052e1a; color: #bbf7d0; border-color: #065f46; }
+      .pill.blue { background: #0b1220; color: #bae6fd; border-color: #0ea5e9; }
+      .hint { color: var(--muted); font-size: 13px; }
+      .title { font-weight: 800; font-size: 18px; letter-spacing: .3px; }
+
+      .list { list-style: none; padding: 0; margin: 0; }
+      .player {
+        display: flex; align-items: center; gap: 10px; padding: 10px 6px; border-bottom: 1px solid var(--line);
+      }
+      .dot { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
+      .dead .name { color: #475569; text-decoration: line-through; }
+      .roleBadge { padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--line); }
+      .roleBadge.mafia { background: #3f1d2b; color: #fecaca; border-color: #ef4444; }
+      .roleBadge.civ { background: #052e1a; color: #bbf7d0; border-color: #22c55e; }
+
+      .screen { display: none; }
+      .screen.active { display: block; }
+
+      .stack { display: grid; gap: 8px; }
+      .footerBar {
+        position: sticky; bottom: 0; left: 0; right: 0; padding-top: 12px;
+        backdrop-filter: blur(6px);
+      }
+
+      .voteGrid { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .voteBtn {
+        display: flex; gap: 8px; align-items: center; justify-content: flex-start;
+        padding: 12px; border-radius: 12px; border: 1px solid var(--line);
+        background: #0b1220; color: var(--text); cursor: pointer; text-align: left;
+      }
+      .voteBtn.selected { outline: 2px solid var(--accent); background: #0b1428; }
+      .voteBtn.disabled { opacity: .45; cursor: not-allowed; filter: saturate(.5); }
+      .sep { height: 1px; background: var(--line); margin: 8px 0; }
+
+      .toast {
+        position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+        background: #0f172a; color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+        box-shadow: 0 10px 30px #0008; z-index: 3; display: none;
+      }
+      .toast.show { display: block; animation: fade 0.2s ease-out; }
+      @keyframes fade { from { opacity: 0; transform: translate(-50%, 10px);} to { opacity: 1; transform: translate(-50%, 0);} }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="brand">
+          <div class="logo"></div>
+          <div>
+            <h1>Mafia</h1>
+            <div id="subtitle" class="sub">Single-file PWA style</div>
+          </div>
+        </div>
+        <div class="row" style="gap:6px">
+          <span id="roomTag" class="pill blue" style="display:none"></span>
+          <span id="meTag" class="pill" style="display:none"></span>
+        </div>
+      </header>
+
+      <!-- Tabs inside Lobby -->
+      <div id="tabs" class="tabs" style="display:none">
+        <button class="tab active" data-tab="lobbyTab">Lobby</button>
+        <button class="tab" data-tab="settingsTab">Settings</button>
+      </div>
+
+      <!-- Join Screen -->
+      <section id="screen-join" class="screen active">
+        <div class="card grid">
+          <div class="title">Join or Create a Room</div>
+          <div class="row">
+            <input id="nameInput" type="text" placeholder="Your name" />
+          </div>
+          <div class="row">
+            <input id="codeInput" type="text" placeholder="Room code (e.g. 4F2K9Q)" style="text-transform: uppercase" />
+          </div>
+          <div class="row">
+            <button id="createBtn" class="btn primary grow">Create Room</button>
+            <button id="joinBtn" class="btn grow">Join Room</button>
+          </div>
+          <div class="row">
+            <span class="hint">Tip: Share the 6-letter room code with your friends.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lobby Screen (with tabs) -->
+      <section id="screen-lobby" class="screen">
+        <!-- LOBBY TAB -->
+        <div id="lobbyTab" class="card grid">
+          <div class="row" style="align-items: center">
+            <div class="title grow">Lobby</div>
+            <span id="hostBadge" class="pill" style="display:none">Host</span>
+          </div>
+
+          <div id="statusLine" class="sub"></div>
+
+          <div class="stack">
+            <div class="row">
+              <div class="pill">Players: <span id="aliveCount">0</span></div>
+              <div class="pill">Round: <span id="roundNo">1</span></div>
+              <div class="pill">Phase: <span id="phaseText">lobby</span></div>
+            </div>
+
+            <ul id="playersList" class="list card" style="padding:0"></ul>
+
+            <div id="votePanel" class="card" style="display:none">
+              <div class="row" style="align-items:center">
+                <div class="title grow" id="voteTitle">Voting</div>
+                <span id="votePhaseBadge" class="pill blue">Voting</span>
+              </div>
+              <div id="voteHint" class="hint">Select a player. No skips allowed.</div>
+              <div id="voteGrid" class="voteGrid" style="margin-top:8px"></div>
+              <div class="row footerBar">
+                <button id="submitVoteBtn" class="btn success grow" disabled>Submit Vote</button>
+              </div>
+              <div class="sub" id="voteStatus" style="margin-top:6px"></div>
+            </div>
+
+            <div id="ejectPanel" class="card" style="display:none">
+              <div class="title" id="ejectTitle">Ejection</div>
+              <div id="ejectDetail" class="hint"></div>
+            </div>
+
+            <div class="row footerBar" id="hostControls" style="display:none">
+              <button id="assignBtn" class="btn accent grow">Assign Roles</button>
+              <button id="startVoteBtn" class="btn warn grow">Start Vote</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settingsTab" class="card grid" style="display:none">
+          <div class="title">Settings</div>
+          <div class="row" style="align-items:center">
+            <div class="grow">
+              <div class="sub">Mafia Count: <strong id="sMafiaVal">1</strong></div>
+              <input id="sMafia" type="range" min="1" max="1" value="1" />
+            </div>
+          </div>
+          <div class="row" style="align-items:center">
+            <div class="grow">
+              <div class="sub">Bias (odds): <strong id="sBiasVal">1.0</strong></div>
+              <input id="sBias" type="range" min="0" max="5" step="0.1" value="1" />
+            </div>
+          </div>
+          <div class="row">
+            <input id="sSeed" type="text" placeholder="Seed (optional)" />
+          </div>
+          <div class="hint">Only the host can change settings. Bias increases the chance that long-time civilians become Mafia.</div>
+        </div>
+      </section>
+
+      <!-- Role Screen -->
+      <section id="screen-role" class="screen">
+        <div class="card grid" style="text-align:center">
+          <div class="title">Your Role</div>
+          <div id="roleBadge" class="pill" style="margin: 8px auto; font-size:14px"></div>
+          <div class="row" style="justify-content:center; gap:10px">
+            <div class="pill">Alive players: <strong id="aliveCounter2">0</strong></div>
+            <div class="pill">Mafia left: <strong id="mafiaCounter2">0</strong></div>
+          </div>
+          <div class="row footerBar" style="justify-content:center">
+            <button id="backToLobbyBtn" class="btn primary" style="min-width: 200px">Back to Lobby</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="toast" class="toast"></div>
+    </div>
+
+    <script type="module">
+      // Configure Firebase: No-Auth "Test Mode" friendly. Only databaseURL is required.
+      // IMPORTANT: With test rules, anyone can read/write. For real games, enable Auth and secure rules.
+      const firebaseConfig = {
+        databaseURL: "https://testgame-e98b8-default-rtdb.asia-southeast1.firebasedatabase.app/"
+      };
+
+      // Load Firebase modules
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+      import { getDatabase, ref, set, update, onValue, runTransaction, get } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+
+      // App state
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const uid = getOrMakeGuestId();
+      const meTag = document.getElementById("meTag");
+      meTag.style.display = "inline-block";
+      meTag.textContent = `You: ${uid.slice(0, 6)}…`;
+
+      // Elements
+      const screenJoin = byId("screen-join");
+      const screenLobby = byId("screen-lobby");
+      const screenRole = byId("screen-role");
+      const tabsEl = byId("tabs");
+      const roomTag = byId("roomTag");
+      const subtitle = byId("subtitle");
+
+      const nameInput = byId("nameInput");
+      const codeInput = byId("codeInput");
+      const createBtn = byId("createBtn");
+      const joinBtn = byId("joinBtn");
+
+      const playersList = byId("playersList");
+      const hostBadge = byId("hostBadge");
+      const hostControls = byId("hostControls");
+      const assignBtn = byId("assignBtn");
+      const startVoteBtn = byId("startVoteBtn");
+      const statusLine = byId("statusLine");
+      const aliveCount = byId("aliveCount");
+      const roundNo = byId("roundNo");
+      const phaseText = byId("phaseText");
+
+      const votePanel = byId("votePanel");
+      const voteGrid = byId("voteGrid");
+      const voteTitle = byId("voteTitle");
+      const votePhaseBadge = byId("votePhaseBadge");
+      const voteHint = byId("voteHint");
+      const submitVoteBtn = byId("submitVoteBtn");
+      const voteStatus = byId("voteStatus");
+
+      const ejectPanel = byId("ejectPanel");
+      const ejectTitle = byId("ejectTitle");
+      const ejectDetail = byId("ejectDetail");
+
+      const sMafia = byId("sMafia");
+      const sMafiaVal = byId("sMafiaVal");
+      const sBias = byId("sBias");
+      const sBiasVal = byId("sBiasVal");
+      const sSeed = byId("sSeed");
+
+      const roleBadge = byId("roleBadge");
+      const backToLobbyBtn = byId("backToLobbyBtn");
+      const aliveCounter2 = byId("aliveCounter2");
+      const mafiaCounter2 = byId("mafiaCounter2");
+
+      const toastEl = byId("toast");
+
+      // Navigation state
+      let roomCode = "";
+      let isHost = false;
+      let myName = "";
+      let roomSnap = null;
+      let myRoleIsMafia = null;
+      let selectedVote = null;
+
+      // PRNG + Weighted mafia selection
+      function mulberry32(seed){return function(){let t=(seed+=0x6d2b79f5);t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;}}
+      function normalizeSeed(seedStr){if(!seedStr||!seedStr.trim())return Math.floor(Math.random()*2**31);let h=2166136261>>>0;for(let i=0;i<seedStr.length;i++){h^=seedStr.charCodeAt(i);h+=(h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);}return h>>>0;}
+      function computeWeights(players,biasFactor){return players.map(p=>Math.max(0,1+(biasFactor||0)*(p.civilianStreak||0)));}
+      function weightedSampleWithoutReplacement(players,k,biasFactor,seedStr){
+        if(k<=0)return[]; if(k>=players.length)return players.map(p=>p.uid);
+        const weights=computeWeights(players,Math.max(0,biasFactor)); const selected=new Set(); const rng=mulberry32(normalizeSeed(seedStr));
+        for(let pick=0;pick<k;pick++){let total=0;for(let i=0;i<players.length;i++){if(!selected.has(players[i].uid)) total+=weights[i];}
+          let r=rng()*total; for(let i=0;i<players.length;i++){const p=players[i]; if(selected.has(p.uid))continue; if(r<weights[i]){selected.add(p.uid);break;} r-=weights[i];}}
+        return Array.from(selected);
+      }
+
+      // UI helpers
+      function byId(id){return document.getElementById(id)}
+      function showToast(msg, ms=2000){ toastEl.textContent = msg; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"), ms); }
+      function switchScreen(id){
+        for (const el of [screenJoin, screenLobby, screenRole]) el.classList.remove("active");
+        byId(id).classList.add("active");
+        tabsEl.style.display = id === "screen-lobby" ? "flex" : "none";
+      }
+      function setActiveTab(tabId){
+        for (const btn of tabsEl.querySelectorAll(".tab")) btn.classList.toggle("active", btn.dataset.tab === tabId);
+        byId("lobbyTab").style.display = tabId === "lobbyTab" ? "block" : "none";
+        byId("settingsTab").style.display = tabId === "settingsTab" ? "block" : "none";
+      }
+      tabsEl.addEventListener("click", (e)=>{
+        const b = e.target.closest(".tab"); if (!b) return; setActiveTab(b.dataset.tab);
+      });
+
+      // Guest identity
+      function getOrMakeGuestId(){
+        const k="mafia-guest-uid";
+        let v=localStorage.getItem(k);
+        if(!v){ v=(self.crypto?.randomUUID?.()||Math.random().toString(36).slice(2))+"-"+Date.now().toString(36); localStorage.setItem(k,v); }
+        return v;
+      }
+
+      // Join/Create handlers
+      createBtn.addEventListener("click", async ()=>{
+        myName = (nameInput.value||"").trim() || `Player-${uid.slice(0,5)}`;
+        roomCode = makeCode();
+        codeInput.value = roomCode;
+        await set(ref(db, `rooms/${roomCode}`), {
+          hostUid: uid,
+          status: "lobby",
+          settings: { mafiaCount: 1, biasFactor: 1, seed: "", round: 1 },
+          game: null,
+          assignments: null,
+          createdAt: Date.now()
+        });
+        await set(ref(db, `rooms/${roomCode}/players/${uid}`), {
+          name: myName, joinedAt: Date.now(), civilianStreak: 0, alive: true
+        });
+        afterJoined();
+      });
+
+      joinBtn.addEventListener("click", async ()=>{
+        myName = (nameInput.value||"").trim() || `Player-${uid.slice(0,5)}`;
+        roomCode = (codeInput.value||"").trim().toUpperCase();
+        if (!roomCode) return alert("Enter room code");
+        await set(ref(db, `rooms/${roomCode}/players/${uid}`), {
+          name: myName, joinedAt: Date.now(), civilianStreak: 0, alive: true
+        });
+        afterJoined();
+      });
+
+      function afterJoined(){
+        roomTag.style.display = "inline-block";
+        roomTag.textContent = `Room ${roomCode}`;
+        subtitle.textContent = "In room • Dark mode";
+        listenRoom();
+        switchScreen("screen-lobby");
+      }
+
+      // Room subscription
+      let unsub = null;
+      function listenRoom(){
+        if (unsub) unsub();
+        unsub = onValue(ref(db, `rooms/${roomCode}`), async (snap)=>{
+          const room = snap.val() || {};
+          roomSnap = room;
+          isHost = room?.hostUid === uid;
+          hostBadge.style.display = isHost ? "inline-block" : "none";
+          hostControls.style.display = "flex"; // In test mode, keep visible, but we gate actions client-side.
+
+          // Status & counters
+          const players = entries(room.players);
+          const alive = players.filter(p=>p.value.alive !== false).length;
+          const mafiaMap = room.assignments?.mafia || {};
+          const mafiaAlive = players.filter(p=>p.value.alive !== false && mafiaMap[p.key]).length;
+
+          aliveCount.textContent = String(alive);
+          aliveCounter2.textContent = String(alive);
+          mafiaCounter2.textContent = String(mafiaAlive);
+          roundNo.textContent = String(room.settings?.round || 1);
+          phaseText.textContent = String(room.game?.phase || room.status || "lobby");
+          statusLine.textContent = `Host: ${room.hostUid ? (room.hostUid === uid ? "You" : room.hostUid.slice(0,6)+"…") : "–"}`;
+
+          // Players list
+          renderPlayers(players, mafiaMap);
+
+          // Settings reflect
+          const s = room.settings || { mafiaCount: 1, biasFactor: 1, seed: "" };
+          const maxMafia = Math.max(1, Math.floor(players.length/2) || 1);
+          sMafia.max = String(maxMafia);
+          sMafia.value = String(Math.min(s.mafiaCount || 1, maxMafia));
+          sMafiaVal.textContent = sMafia.value;
+          sBias.value = String(s.biasFactor || 0);
+          sBiasVal.textContent = Number(sBias.value).toFixed(1);
+          sSeed.value = s.seed || "";
+
+          // My role (read-only display)
+          const isMafia = !!mafiaMap[uid];
+          myRoleIsMafia = room.assignments ? isMafia : null;
+          renderRoleBadge();
+
+          // Vote panel
+          const vote = room.game?.vote || null;
+          if (vote) {
+            showVotePanel(vote, players, room.game.phase);
+            // Auto-tally check
+            await maybeTallyVoteTransaction(roomCode);
+          } else {
+            votePanel.style.display = "none";
+          }
+
+          // Ejection panel
+          if (room.game?.lastEject) {
+            ejectPanel.style.display = "block";
+            const ej = room.game.lastEject;
+            ejectTitle.textContent = `${ej.name || ej.uid.slice(0,6)+"…"} was ejected`;
+            ejectDetail.innerHTML = `Role revealed: <span class="roleBadge ${ej.role==='mafia'?'mafia':'civ'}">${ej.role === 'mafia' ? 'Mafia' : 'Civilian'}</span>`;
+          } else {
+            ejectPanel.style.display = "none";
+          }
+
+          // Tabs visible
+          tabsEl.style.display = "flex";
+        });
+      }
+
+      function renderPlayers(playersEntries, mafiaMap){
+        playersEntries.sort((a,b)=> (a.value.joinedAt||0) - (b.value.joinedAt||0));
+        playersList.innerHTML = "";
+        for (const p of playersEntries) {
+          const li = document.createElement("li");
+          li.className = "player" + ((p.value.alive===false) ? " dead" : "");
+          const dot = document.createElement("div");
+          dot.className = "dot";
+          const name = document.createElement("div");
+          name.className = "grow name";
+          name.textContent = p.value.name || p.key.slice(0,6)+"…";
+          const right = document.createElement("div");
+          right.className = "row";
+          if (p.value.alive === false) {
+            const rb = document.createElement("span");
+            const role = mafiaMap[p.key] ? "mafia" : "civilian";
+            rb.className = "roleBadge " + (role === "mafia" ? "mafia" : "civ");
+            rb.textContent = role === "mafia" ? "Mafia" : "Civilian";
+            right.appendChild(rb);
+          }
+          li.appendChild(dot);
+          li.appendChild(name);
+          li.appendChild(right);
+          playersList.appendChild(li);
+        }
+      }
+
+      function renderRoleBadge(){
+        if (myRoleIsMafia == null) {
+          roleBadge.textContent = "Waiting for assignment…";
+          roleBadge.className = "pill";
+        } else if (myRoleIsMafia) {
+          roleBadge.textContent = "MAFIA";
+          roleBadge.className = "pill red";
+        } else {
+          roleBadge.textContent = "CIVILIAN";
+          roleBadge.className = "pill green";
+        }
+      }
+
+      backToLobbyBtn.addEventListener("click", ()=> switchScreen("screen-lobby"));
+
+      // Settings changes (host only by convention)
+      sMafia.addEventListener("input", async ()=>{
+        sMafiaVal.textContent = sMafia.value;
+        if (!roomCode) return;
+        await update(ref(db, `rooms/${roomCode}/settings`), { mafiaCount: Number(sMafia.value) });
+      });
+      sBias.addEventListener("input", async ()=>{
+        sBiasVal.textContent = Number(sBias.value).toFixed(1);
+        if (!roomCode) return;
+        await update(ref(db, `rooms/${roomCode}/settings`), { biasFactor: Number(sBias.value) });
+      });
+      sSeed.addEventListener("change", async ()=>{
+        if (!roomCode) return;
+        await update(ref(db, `rooms/${roomCode}/settings`), { seed: sSeed.value });
+      });
+
+      // Assign roles (host)
+      assignBtn.addEventListener("click", async ()=>{
+        if (!roomCode || !roomSnap) return;
+        await runTransaction(ref(db, `rooms/${roomCode}`), (current)=>{
+          if (!current) return current;
+          const playersObj = current.players || {};
+          const entries = Object.entries(playersObj).map(([id, p])=>({uid:id, name:p.name, civilianStreak:p.civilianStreak||0}));
+          if (!entries.length) return current;
+          // Reset alive
+          for (const [id, p] of Object.entries(playersObj)) {
+            playersObj[id] = {...p, alive: true};
+          }
+          const settings = current.settings || { mafiaCount: 1, biasFactor: 1, seed: "", round: 1 };
+          const maxMafia = Math.max(1, Math.floor(entries.length/2));
+          const mCount = Math.max(1, Math.min(settings.mafiaCount||1, maxMafia));
+          const mafia = weightedSampleWithoutReplacement(entries, mCount, settings.biasFactor||0, settings.seed||undefined);
+          const mafiaMap = {}; mafia.forEach(id=> mafiaMap[id]=true);
+          // Update streaks
+          for (const [id, p] of Object.entries(playersObj)) {
+            playersObj[id] = { ...p, civilianStreak: mafiaMap[id] ? 0 : (p.civilianStreak||0)+1 };
+          }
+          current.players = playersObj;
+          current.assignments = { round: settings.round || 1, createdAt: Date.now(), mafia: mafiaMap };
+          current.status = "assigned";
+          current.game = { phase: "in-progress", vote: null, lastEject: null };
+          current.settings = { ...settings, round: (settings.round||1)+1 };
+          return current;
+        });
+        // Navigate each player to Role screen
+        switchScreen("screen-role");
+      });
+
+      // Start voting (host)
+      startVoteBtn.addEventListener("click", async ()=>{
+        if (!roomCode || !roomSnap) return;
+        const players = Object.entries(roomSnap.players||{});
+        const alive = players.filter(([id, p])=> p.alive !== false).map(([id])=> id);
+        if (alive.length < 3) { showToast("Need at least 3 alive players"); return; }
+        await runTransaction(ref(db, `rooms/${roomCode}/game`), (game)=>{
+          if (!game) game = {};
+          if (game.vote) return game; // already open
+          game.phase = "voting";
+          const candidates = mapKeysTrue(alive);
+          const eligibleVoters = mapKeysTrue(alive); // No skips; everyone alive must vote
+          game.vote = {
+            id: (game.voteSeq||0)+1,
+            phase: "voting",
+            candidates,
+            eligibleVoters,
+            votes: {},
+            closed: false
+          };
+          game.voteSeq = (game.voteSeq||0)+1;
+          game.lastEject = null;
+          return game;
+        });
+        showToast("Vote started");
+      });
+
+      // Vote UI
+      submitVoteBtn.addEventListener("click", async ()=>{
+        if (!roomCode || !roomSnap || !roomSnap.game?.vote || !selectedVote) return;
+        const vote = roomSnap.game.vote;
+        if (!vote.eligibleVoters?.[uid]) { showToast("You are not eligible to vote now"); return; }
+        if (!vote.candidates?.[selectedVote]) { showToast("Invalid candidate"); return; }
+        await update(ref(db, `rooms/${roomCode}/game/vote/votes/${uid}`), selectedVote);
+        submitVoteBtn.disabled = true;
+        showToast("Vote submitted");
+        // Re-check tally
+        await maybeTallyVoteTransaction(roomCode);
+      });
+
+      function showVotePanel(vote, playersEntries, phase){
+        // Panel visible
+        votePanel.style.display = "block";
+        votePhaseBadge.textContent = phase === "revote" ? "Re-vote" : "Voting";
+        votePhaseBadge.className = "pill blue";
+        voteTitle.textContent = phase === "revote" ? "Tie! Re-vote" : "Voting";
+        voteHint.textContent = phase === "revote"
+          ? "Only tied players are options. Tied players cannot vote."
+          : "Choose one player. No skips.";
+
+        const isEligible = !!vote.eligibleVoters?.[uid];
+        const myCurrent = vote.votes?.[uid] || null;
+        selectedVote = myCurrent;
+
+        // Build candidates list
+        const candIds = Object.keys(vote.candidates || {});
+        const playersMap = Object.fromEntries(playersEntries.map(p=>[p.key, p.value]));
+        voteGrid.innerHTML = "";
+        for (const id of candIds) {
+          const p = playersMap[id];
+          const btn = document.createElement("button");
+          btn.className = "voteBtn" + (selectedVote===id ? " selected" : "");
+          btn.innerHTML = `
+            <div class="dot" style="background:${p?.alive===false?'#334155':'#22d3ee'}"></div>
+            <div class="grow">${escapeHtml(p?.name || id.slice(0,6)+"…")}</div>
+          `;
+          if (!isEligible) btn.classList.add("disabled");
+          btn.addEventListener("click", ()=>{
+            if (!isEligible) return;
+            selectedVote = id;
+            submitVoteBtn.disabled = false;
+            for (const el of voteGrid.querySelectorAll(".voteBtn")) el.classList.remove("selected");
+            btn.classList.add("selected");
+            if (navigator.vibrate) navigator.vibrate(20);
+          });
+          voteGrid.appendChild(btn);
+        }
+
+        // Vote status
+        const eligible = Object.keys(vote.eligibleVoters || {});
+        const cast = Object.keys(vote.votes || {}).length;
+        voteStatus.textContent = `Votes: ${cast}/${eligible.length}`;
+        submitVoteBtn.disabled = !isEligible || !selectedVote;
+      }
+
+      // Tally logic (transaction to avoid races)
+      async function maybeTallyVoteTransaction(code){
+        await runTransaction(ref(db, `rooms/${code}/game`), (game)=>{
+          if (!game?.vote || game.vote.closed) return game;
+          const vote = game.vote;
+          const eligible = Object.keys(vote.eligibleVoters || {});
+          const votes = vote.votes || {};
+          const castCount = Object.keys(votes).length;
+          if (castCount < eligible.length) return game; // Not complete yet
+
+          // Count for candidates
+          const tally = {};
+          for (const vUid of Object.keys(votes)) {
+            const cand = votes[vUid];
+            if (!vote.candidates[cand]) continue;
+            tally[cand] = (tally[cand]||0)+1;
+          }
+          // Find max
+          const entriesT = Object.entries(tally);
+          if (!entriesT.length) { // edge: nobody voted validly -> treat as tie among all candidates
+            const tied = Object.keys(vote.candidates);
+            return setupRevote(game, tied);
+          }
+          entriesT.sort((a,b)=> b[1]-a[1]);
+          const topCount = entriesT[0][1];
+          const tied = entriesT.filter(([id,c])=>c===topCount).map(([id])=>id);
+
+          if (tied.length === 1) {
+            // Eject winner
+            const ejectUid = tied[0];
+            // Update alive + reveal role
+            const mafiaMap = game.rootAssignmentsMafia || null; // we don't have root here; fallback later
+            // We'll compute role via assignments at read-time; here, just mark and clear vote
+            game.vote.closed = true;
+            game.lastEject = { uid: ejectUid, name: null, role: null, at: Date.now() };
+            // We'll set alive false in the room root path; but we're in /game transaction.
+            // Return a flag to signal "ejectUid" to the caller; since we can't, we'll embed request:
+            game.applyEject = ejectUid;
+            game.phase = "in-progress";
+          } else {
+            // Re-vote among tied; tied players cannot vote
+            return setupRevote(game, tied);
+          }
+          return game;
+        });
+
+        // Post-transaction: if applyEject is present, finalize on root
+        const gameSnap = await get(ref(db, `rooms/${code}/game`));
+        const game = gameSnap.val();
+        if (game?.applyEject) {
+          const ejectUid = game.applyEject;
+          // Resolve name and role from room root:
+          const room = (await get(ref(db, `rooms/${code}`))).val();
+          const name = room.players?.[ejectUid]?.name || ejectUid.slice(0,6)+"…";
+          const role = room.assignments?.mafia?.[ejectUid] ? "mafia" : "civilian";
+          const updates = {};
+          updates[`rooms/${code}/players/${ejectUid}/alive`] = false;
+          updates[`rooms/${code}/game/lastEject`] = { uid: ejectUid, name, role, at: Date.now() };
+          updates[`rooms/${code}/game/vote`] = null;
+          updates[`rooms/${code}/game/applyEject`] = null;
+          await update(ref(db), updates);
+          showToast(`${name} was ejected (${role})`, 2200);
+          // Win check
+          await checkWinCondition(code);
+        }
+      }
+
+      function setupRevote(game, tied){
+        const alive = Object.keys(game.aliveMap||{}); // not maintained; reconstruct via room root in caller if needed
+        // Better: compute eligible as "all alive except tied" during apply step outside; here we simulate:
+        game.phase = "revote";
+        const elig = {}; // unknown alive; set placeholder; corrected by outer updater
+        const cand = mapKeysTrue(tied);
+        game.vote = {
+          id: (game.voteSeq||0)+1,
+          phase: "revote",
+          candidates: cand,
+          eligibleVoters: elig, // will be filled by outer updater
+          votes: {},
+          closed: false
+        };
+        game.voteSeq = (game.voteSeq||0)+1;
+        return game;
+      }
+
+      // After a revote placeholder is created, fill eligibleVoters from room root
+      onValue(ref(db, () => `rooms/${roomCode}`), ()=>{}); // no-op to maintain scope
+
+      // Monitor game changes to correct revote eligible list
+      let lastVoteIdHandled = 0;
+      onValue(ref(db, `rooms/`), ()=>{}); // keep active
+
+      // Whenever vote changes, patch eligible if needed
+      async function patchRevoteEligibleIfNeeded(){
+        if (!roomCode || !roomSnap?.game?.vote) return;
+        const vote = roomSnap.game.vote;
+        if (vote.phase !== "revote") return;
+        if (vote.eligibleVoters && Object.keys(vote.eligibleVoters).length) return;
+        // Fill eligible: all alive except tied candidates
+        const playersObj = roomSnap.players || {};
+        const tied = new Set(Object.keys(vote.candidates||{}));
+        const eligible = {};
+        for (const [id, p] of Object.entries(playersObj)) {
+          if (p.alive === false) continue;
+          if (tied.has(id)) continue;
+          eligible[id] = true;
+        }
+        await update(ref(db, `rooms/${roomCode}/game/vote/eligibleVoters`), eligible);
+      }
+
+      // Listen room root to patch when necessary
+      setInterval(()=> patchRevoteEligibleIfNeeded(), 1000);
+
+      async function checkWinCondition(code){
+        const room = (await get(ref(db, `rooms/${code}`))).val();
+        const players = Object.entries(room.players||{});
+        const alive = players.filter(([id,p])=>p.alive!==false).map(([id])=>id);
+        const mafiaAlive = alive.filter(id=> room.assignments?.mafia?.[id]).length;
+        const civAlive = alive.length - mafiaAlive;
+        let winner = null;
+        if (mafiaAlive===0) winner = "civilians";
+        else if (mafiaAlive >= civAlive) winner = "mafia";
+        if (winner) {
+          await update(ref(db, `rooms/${code}/game`), { phase: "gameover", winner });
+          showToast(`Game over • ${winner.toUpperCase()} win`);
+        }
+      }
+
+      // UTIL
+      function entries(obj){ return Object.entries(obj||{}).map(([key, value])=>({key, value})); }
+      function mapKeysTrue(arr){ const o={}; for (const id of arr) o[id]=true; return o; }
+      function makeCode(){ const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for (let i=0;i<6;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+      function escapeHtml(s){ return String(s).replace(/[&<>"']/g,(m)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+
+      // Screen transitions shortcut
+      // Jump to Role screen after assignment (local UX)
+      document.addEventListener("keydown", (e)=>{
+        if (e.key === "Escape") { switchScreen("screen-lobby"); }
+      });
+
+      // Initial tab
+      setActiveTab("lobbyTab");
+
+      // When assignments appear, auto-navigate to Role screen for a moment
+      setInterval(()=>{
+        if (!roomSnap) return;
+        if (roomSnap.assignments && screenRole.classList.contains("active")===false && screenJoin.classList.contains("active")===false) {
+          // Optional: keep Lobby; uncomment to auto-show role
+          // switchScreen("screen-role");
+        }
+      }, 1500);
+    </script>
+</head>
+
+
+  <script src="app.js"></script>
+
+
+</body>
+
+</html>
